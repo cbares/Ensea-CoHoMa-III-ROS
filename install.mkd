@@ -1,0 +1,24 @@
+Starting ros2 package:
+
+```sh
+. /opt/ros/iron/setup.bash
+colcon build --symlink-install --packages-select <<package_name>>
+. install/setup.bash
+```
+
+Create package:
+```sh
+ros2 pkg create --build-type ament_python --license Apache-2.0 modelidar --dependencies rclpy
+```
+
+Display URDF model
+```sh
+ros2 launch urdf_tutorial display.launch.py model:=/home/ws/src/turtle_docker/src/urdf/urdf_wild_thumper.urdf.xacro 
+```
+
+
+
+```
+rviz2 -d src/modelidar/urdf/wild_thumper.rviz 
+ros2 launch modelidar demo_launch.py
+```
