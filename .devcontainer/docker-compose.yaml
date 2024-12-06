@@ -1,0 +1,27 @@
+services:
+  ros_container:
+    build:
+      context: .
+      dockerfile: Dockerfile_urdf_tutorial
+      args:
+        USERNAME: $_ROS_USER
+    privileged: true
+    environment:
+      DISPLAY: $DISPLAY
+      ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
+      ROS_DOMAIN_ID: "42"
+    volumes:
+      - ../:/home/$_ROS_USER/ws/src:cached
+      - /tmp/.X11-unix:/tmp/.X11-unix:cached
+      - /dev/dri:/dev/dri:cached
+      - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
+    network_mode: host
+    user: theseus
+    command: /bin/bash
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -1,7 +1,14 @@
-Starting ros2 package:
+## Docker:
+
+```console
+docker compose build
+docker compose run --remove-orphans  ros_container bash
+```
+
+## Starting ros2 package:
 
 ```sh
-. /opt/ros/iron/setup.bash
+. /opt/ros/jazzy/setup.bash
 colcon build --symlink-install --packages-select <<package_name>>
 . install/setup.bash
 ```
@@ -13,10 +20,10 @@ ros2 pkg create --build-type ament_python --license Apache-2.0 modelidar --depen
 
 Display URDF model
 ```sh
-ros2 launch urdf_tutorial display.launch.py model:=/home/ws/src/turtle_docker/src/urdf/urdf_wild_thumper.urdf.xacro 
+ros2 launch urdf_tutorial display.launch.py model:=/home/theseus/ws/src/turtle_docker/src/urdf/urdf_wild_thumper.urdf.xacro 
 ```
 
-
+## Example excution
 
 ```
 rviz2 -d src/modelidar/urdf/wild_thumper.rviz 
