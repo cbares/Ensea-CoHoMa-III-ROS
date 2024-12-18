@@ -8,8 +8,8 @@
             "USERNAME": "theseus"
         }
     },
-    "workspaceFolder": "/home/ws",
-    "workspaceMount": "source=${localWorkspaceFolder},target=/home/ws/src,type=bind",
+    "workspaceFolder": "/home/theseus/ws",
+    "workspaceMount": "source=${localWorkspaceFolder},target=/home/theseus/ws/src,type=bind",
     "customizations": {
         "vscode": {
             "extensions":[
@@ -35,6 +35,6 @@
         "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
         "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
     ],
-    "postCreateCommand": "sudo rosdep update && sudo rosdep install --from-paths src --ignore-src -y && sudo chown -R $(whoami) /home/ws/",
-    "postAttachCommand": "grep -qF 'TAG' $HOME/.bashrc || echo 'source /home/ws/install/setup.bash # TAG' >> $HOME/.bashrc"
+    "postCreateCommand": "rosdep update && rosdep install --from-paths src --ignore-src -y && sudo chown -R $(whoami) ~/ws/",
+    "postAttachCommand": "grep -qF 'TAG' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG' >> $HOME/.bashrc"
 }
