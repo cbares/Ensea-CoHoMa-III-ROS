@@ -23,13 +23,19 @@ RUN usermod --login $USERNAME --move-home --home /home/$USERNAME $OLD_USERNAME\
 
 RUN apt-get update && apt-get upgrade -y
 RUN apt-get update && apt-get install -y python3-pip
-ENV SHELL /bin/bash
+ENV SHELL=/bin/bash
 
 # ********************************************************
 # * Anything else you want to do like clean up goes here *
 # ********************************************************
 
-RUN sudo apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-urdf-tutorial ros-${ROS_DISTRO}-control-toolbox
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-joy-teleop ros-${ROS_DISTRO}-joy \
+    ros-${ROS_DISTRO}-teleop-twist-joy ros-${ROS_DISTRO}-teleop-twist-keyboard \ 
+    ros-${ROS_DISTRO}-joy-linux ros-${ROS_DISTRO}-joy-tester
+
+RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-urdf-tutorial ros-${ROS_DISTRO}-control-toolbox
+RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-rqt*
+
 # Change the size of rviz window (hpi screen)
 RUN sed -i -e "s/1200/4000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
 RUN sed -i -e "s/800/2000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
@@ -40,8 +46,6 @@ WORKDIR /home/${USERNAME}/ws
 RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --ignore-src -y && sudo chown -R $(whoami) /home/${USERNAME}/ws/
 RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.bashrc
 RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
-
-
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 CMD ["/bin/bash"]

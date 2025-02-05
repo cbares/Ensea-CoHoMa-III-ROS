@@ -1,3 +1,5 @@
+name: Modelibot
+
 services:
   ros_container:
     build:
@@ -15,6 +17,8 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:cached
       - /dev/dri:/dev/dri:cached
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
+      - /dev/input:/dev/input:bind
+      - /run/user/1000:/run/user/1000
     network_mode: host
     user: theseus
     command: /bin/bash
