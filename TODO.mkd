@@ -1,0 +1,5 @@
+# TODO:
+
+* explicit auto startup procedure
+* set xacro files for wheeltec rosbot plus
+* fiw CMakeLists.txt for ros control

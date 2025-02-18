@@ -47,5 +47,8 @@ RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --igno
 RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.bashrc
 RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
 
+RUN colcon build
+
+
 # [Optional] Set the default user. Omit if you want to keep the default as root.
 CMD ["/bin/bash"]

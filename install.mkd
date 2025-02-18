@@ -21,11 +21,22 @@ Create package:
 ros2 pkg create --build-type ament_python --license Apache-2.0 modelidar --dependencies rclpy
 ```
 
+
+Check URDF Model
+```sh
+xacro src/modelidar/urdf/wild_thumper.urdf.xacro  |check_urdf -
+```
+
 Display URDF model
 
 ```sh
-ros2 launch urdf_tutorial display.launch.py model:=/home/theseus/ws/src/turtle_docker/src/urdf/urdf_wild_thumper.urdf.xacro 
+ros2 launch urdf_tutorial display.launch.py model:=/home/theseus/ws/src/modelidar/urdf/wild_thumper.urdf.xacro 
 ```
+or
+```sh
+ros2 launch modelidar view_robot.launch.py
+```
+
 
 ## Example excution
 
@@ -33,3 +44,5 @@ ros2 launch urdf_tutorial display.launch.py model:=/home/theseus/ws/src/turtle_d
 rviz2 -d src/modelidar/urdf/wild_thumper.rviz 
 ros2 launch modelidar demo_launch.py
 ```
+this example use the mock state publisher define in `modelidar/mock_state_publisher.py`
+

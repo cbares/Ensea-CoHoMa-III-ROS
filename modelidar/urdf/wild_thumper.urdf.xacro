@@ -1,30 +1,14 @@
 <?xml version="1.0"?>
 <robot name="wild_thumper" xmlns:xacro="http://ros.org/wiki/xacro">
+	<xacro:arg name="prefix" default="" />
+  	<xacro:arg name="use_mock_hardware" default="false" />
+
 	<xacro:property name="PI" value="3.1415926535897931" />
 
-	<material name="wtgrey">
-		<color rgba="0.5 0.5 0.5 0.5"/>
-	</material>
-	<material name="wtsilver">
-		<color rgba="0.5 0.5 0.5 0.8"/>
-	</material>
-	<material name="wtred">
-		<color rgba="1 0 0 1"/>
-	</material>
-	<material name="wtblack">
-		<color rgba="0 0 0 .8"/>
-	</material>
-	<material name="wtgreen">
-		<color rgba="0 1 0 0.8"/>
-	</material>
-	<material name="wtblue">
-		<color rgba="0 0 1 0.8"/>
-	</material>
-	<material name="wtpurple">
-		<color rgba="1 0 1 0.8"/>
-	</material>
+	<!-- Import Rviz colors -->
+	<xacro:include filename="materials.xacro" />
 
-	<link name="base_footprint">
+	<link name="$(arg prefix)base_footprint">
 		<visual>
 			<geometry>
 				<box size="0.28 0.31 0.000001"/>
@@ -32,18 +16,14 @@
 			<material name="wtgrey"/>
 		</visual>
 		<collision>
-			<geometry>
-				<box size="0.28 0.31 0.30"/>
+			<origin xyz="0 0 0.1" rpy="0 0 0"/>
+			<geometry>			
+				<box size="0.28 0.31 0.2"/>
 			</geometry>
 		</collision>
 	</link>
 
-	<link name="base_link">
-		<collision>
-			<geometry>
-				<box size="0.23 0.12 0.09"/>
-			</geometry>
-		</collision>
+	<link name="$(arg prefix)base_link">
 		<visual>
 			<origin xyz="-0.00275 0 0" rpy="0 0 0"/>
 			<geometry>
@@ -57,7 +37,7 @@
 		</inertial>
 	</link>
 
-	<link name="base_imu_link">
+	<link name="$(arg prefix)base_imu_link">
 		<visual>
 			<origin xyz="-0.014319 0 0" rpy="0 0 0"/>
 			<geometry>
@@ -68,7 +48,7 @@
 		</visual>
 	</link>
 
-	<link name="mounting_plate">
+	<link name="$(arg prefix)mounting_plate">
 		<visual>
 			<geometry>
 				<box size="0.23 0.12 0.001"/>
@@ -76,7 +56,7 @@
 		</visual>
 	</link>
 
-	<link name="lidar">
+	<link name="$(arg prefix)lidar">
 		<visual>
 			<geometry>
 				<!--<cylinder radius="0.05207" length="0.0716"/>-->
@@ -88,7 +68,7 @@
 		</visual>
 	</link>
 
-	<link name="camera_front">
+	<link name="$(arg prefix)camera_front">
 		<visual>
 			<geometry>
 				<box size="0.016 0.044 0.02"/>
@@ -98,40 +78,40 @@
 		</visual>
 	</link>
 
-	<joint name="base_link_joint" type="fixed">
-		<parent link="base_footprint"/>
-		<child link="base_link"/>
+	<joint name="$(arg prefix)base_link_joint" type="fixed">
+		<parent link="$(arg prefix)base_footprint"/>
+		<child link="$(arg prefix)base_link"/>
 		<origin xyz="0.0 0.0 0.082" rpy="0 0 0"/>
 	</joint>
 
-	<joint name="mounting_plate_joint" type="fixed">
-		<parent link="base_link"/>
-		<child link="mounting_plate"/>
+	<joint name="$(arg prefix)mounting_plate_joint" type="fixed">
+		<parent link="$(arg prefix)base_link"/>
+		<child link="$(arg prefix)mounting_plate"/>
 		<origin xyz="0.0 0.0 0.044" rpy="0 0 0"/>
 	</joint>
 
-	<joint name="imu_joint" type="fixed">
-		<parent link="mounting_plate"/>
-		<child link="base_imu_link"/>
+	<joint name="$(arg prefix)imu_joint" type="fixed">
+		<parent link="$(arg prefix)mounting_plate"/>
+		<child link="$(arg prefix)base_imu_link"/>
 		<!--<origin xyz="0.06 -0.03 0.058" rpy="0 0 0"/>-->
 		<origin xyz="0 0 0.0765" rpy="0 0 0"/>
 	</joint>
 
 
-	<joint name="camera_front_joint" type="fixed">
-		<parent link="mounting_plate"/>
-		<child link="camera_front"/>
+	<joint name="$(arg prefix)camera_front_joint" type="fixed">
+		<parent link="$(arg prefix)mounting_plate"/>
+		<child link="$(arg prefix)camera_front"/>
 		<origin xyz="0.115 0.00 -0.012" rpy="0 0 0"/>
 	</joint>
 	
-	<joint name="lidar_joint" type="fixed">
-		<parent link="mounting_plate"/>
-		<child link="lidar"/>
+	<joint name="$(arg prefix)lidar_joint" type="fixed">
+		<parent link="$(arg prefix)mounting_plate"/>
+		<child link="$(arg prefix)lidar"/>
 		<origin xyz="0.060 0.0 0" rpy="0 0 ${-110*PI/180}"/>
 	</joint>
 
-	<xacro:macro name="wheel" params="pos side xyz rpy">   
-		<link name="${pos}_${side}_wheel">
+	<xacro:macro name="wheel" params="prefix pos side xyz rpy">   
+		<link name="${prefix}${pos}_${side}_wheel">
 			<visual>
 				<origin xyz="0 0 0" rpy="0 0 0"/>
 				<geometry>
@@ -139,12 +119,6 @@
 				</geometry>
 				<material name="wtblack"/>
 			</visual>
-			<collision>
-				<origin xyz="0 0 0" rpy="${PI/2} 0 0"/>
-				<geometry>
-					<cylinder radius="0.06" length="0.06"/>
-				</geometry>
-			</collision>
 			<inertial>
 				<origin xyz="0 0 0" rpy="0 0 0"/>
 				<mass value="0.2"/>
@@ -152,7 +126,7 @@
 			</inertial>
 		</link>
 
-		<gazebo reference="${pos}_${side}_wheel">
+		<gazebo reference="${prefix}${pos}_${side}_wheel">
 			<mu1 value="1.0"/>
 			<mu2 value="0.2"/>
 			<kp value="1000000000000.0" />
@@ -161,36 +135,64 @@
 			<minDepth>0.005</minDepth>
 		</gazebo>
 
-		<joint name="${pos}_${side}_wheel_joint" type="continuous">
-			<parent link="base_link"/>
-			<child link="${pos}_${side}_wheel"/>
+		<joint name="${prefix}${pos}_${side}_wheel_joint" type="continuous">
+			<parent link="$(arg prefix)base_link"/>
+			<child link="${prefix}${pos}_${side}_wheel"/>
 			<axis xyz="0 1 0"/>
 			<origin xyz="${xyz}" rpy="${rpy}"/>
+			<mimic joint="${prefix}virtual_${side}_wheel_joint" multiplier="1" offset="0"/>
 		</joint>
 
-		<transmission name="${pos}_${side}_wheel_trans" type="SimpleTransmission">
+		<transmission name="${prefix}${pos}_${side}_wheel_trans" type="SimpleTransmission">
 			<type>transmission_interface/SimpleTransmission</type>
-			<joint name="${pos}_${side}_wheel_joint">
+			<joint name="${prefix}${pos}_${side}_wheel_joint">
 				<hardwareInterface>VelocityJointInterface</hardwareInterface>
 			</joint>
-			<actuator name="{pos}_${side}_wheel_motor">
+			<actuator name="${prefix}{pos}_${side}_wheel_motor">
 				<mechanicalReduction>1</mechanicalReduction>
 			</actuator>
 		</transmission>
 	</xacro:macro>
 
-	<xacro:wheel pos="rear" side="left"   xyz="-0.07525  0.12 -0.025" rpy="${-5*PI/180} 0 0" />
-	<xacro:wheel pos="rear" side="right"  xyz="-0.07525 -0.12 -0.025" rpy="${5*PI/180} 0 0" />
-	<xacro:wheel pos="front" side="left"  xyz=" 0.07525  0.12 -0.025" rpy="${-5*PI/180} 0 0" />
-	<xacro:wheel pos="front" side="right" xyz=" 0.07525 -0.12 -0.025" rpy="${5*PI/180} 0 0" />
 
+	<xacro:macro name="virtual_wheel" params="prefix side xyz">   
+		<link name="${prefix}virtual_${side}_wheel">
+		<visual>
+			<origin xyz=".0 0 0" rpy="${PI/2} 0 0 "/>
+			<geometry>
+			<cylinder length="0.01" radius="${wheel_radius}"/>
+			</geometry>
+			<material name="invisible"/>
+		</visual>
+		</link>
+		<joint name="${prefix}virtual_${side}_wheel_joint" type="continuous">
+		<parent link="${prefix}base_footprint"/>
+		<child link="${ prefix}virtual_${side}_wheel"/>
+		<origin xyz="${xyz}" rpy="0 0 0"/>
+		<axis xyz="0 1 0"/>
+		<limit effort="100.0" velocity="100.0"/>
+		<dynamics damping="0.2"/>
+		</joint>
+	</xacro:macro>
+
+	<xacro:property name="wheelbase" value="0.24" />
+	<xacro:property name="wheel_radius" value="0.05" />
+
+	<xacro:wheel prefix="$(arg prefix)" pos="rear" side="left"   xyz="-0.07525  +${wheelbase/2} -0.025" rpy="${-5*PI/180} 0 0" /> <!-- rear_left_wheel -->
+	<xacro:wheel prefix="$(arg prefix)" pos="rear" side="right"  xyz="-0.07525 -${wheelbase/2} -0.025" rpy="${5*PI/180} 0 0" /> <!-- rear_right_wheel -->
+	<xacro:wheel prefix="$(arg prefix)" pos="front" side="left"  xyz=" 0.07525  +${wheelbase/2} -0.025" rpy="${-5*PI/180} 0 0" /> <!-- front_left_wheel -->
+	<xacro:wheel prefix="$(arg prefix)" pos="front" side="right" xyz=" 0.07525 -${wheelbase/2} -0.025" rpy="${5*PI/180} 0 0" /> <!-- front_right_wheel -->
+	<xacro:virtual_wheel prefix="$(arg prefix)" side="left" xyz="0 +${wheelbase/2} ${wheel_radius}"/> <!-- virtual_left_wheel -->
+	<xacro:virtual_wheel prefix="$(arg prefix)" side="right" xyz="0 -${wheelbase/2} ${wheel_radius}"/> <!-- virtual_right_wheel -->
+
+	
 	<gazebo>
-		<plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
+		<plugin name="$(arg prefix)gazebo_ros_control" filename="libgazebo_ros_control.so">
 			<robotNamespace>/</robotNamespace>
 			<robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
 		</plugin>
 
-		<plugin name="imu_controller" filename="libgazebo_ros_imu.so">
+		<plugin name="$(arg prefix)imu_controller" filename="libgazebo_ros_imu.so">
 			<alwaysOn>true</alwaysOn>
 			<updateRate>20.0</updateRate>
 			<bodyName>base_imu_link</bodyName>
@@ -243,12 +245,12 @@
 		</gazebo>
 	</xacro:macro>
 
-	<xacro:range_sensor name="sonar_forward_left" ros_topic="range_forward_left" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
-	<xacro:range_sensor name="sonar_forward_right" ros_topic="range_forward_right" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
-	<xacro:range_sensor name="sonar_backward" ros_topic="range_backward" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
+	<xacro:range_sensor name="$(arg prefix)sonar_forward_left" ros_topic="$(arg prefix)range_forward_left" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
+	<xacro:range_sensor name="$(arg prefix)sonar_forward_right" ros_topic="$(arg prefix)range_forward_right" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
+	<xacro:range_sensor name="$(arg prefix)sonar_backward" ros_topic="$(arg prefix)range_backward" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
 
-	<gazebo reference="lidar">
-		<sensor type="ray" name="head_rplidar_a2_sensor">
+	<gazebo reference="$(arg prefix)lidar">
+		<sensor type="ray" name="$(arg prefix)head_rplidar_a2_sensor">
 			<pose>0 0 0 0 0 0</pose>
 			<visualize>false</visualize>
 			<update_rate>12</update_rate>
@@ -278,4 +280,10 @@
 			</plugin>
 		</sensor>
 	</gazebo>
+
+	<!-- <xacro:include filename="gazebo_control.xacro" /> -->
+	<xacro:include filename="ros2_control.xacro" />
+
+	<xacro:modelidar_ros2_control name="Modelidar" prefix="$(arg prefix)" use_mock_hardware="$(arg use_mock_hardware)"/>
+
 </robot>

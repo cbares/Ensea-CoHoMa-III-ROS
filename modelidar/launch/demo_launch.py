@@ -15,7 +15,7 @@ def generate_launch_description():
     rviz_file_name = LaunchConfiguration('rviz_name', default=rviz_default_file_name)
 
     urdf  = PathJoinSubstitution([
-        FindPackageShare(package=package_name),
+        FindPackageShare(package=package_name)                              ,
         'urdf',
         urdf_file_name])
     
@@ -56,12 +56,13 @@ def generate_launch_description():
         Node(
             package='modelidar',
             executable='state_publisher',
-            name='state_publisher',
+            name='mock_state_publisher',
             output='screen'
             ),
         Node(
             package='rviz2',
             executable='rviz2',
+            output="log",
             arguments=['-d', rviz]
             ),
     ])

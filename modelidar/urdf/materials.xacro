@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<material name="wtgrey">
+    <color rgba="0.5 0.5 0.5 0.5"/>
+</material>
+
+<material name="wtsilver">
+    <color rgba="0.5 0.5 0.5 0.8"/>
+</material>
+
+<material name="wtred">
+    <color rgba="1 0 0 1"/>
+</material>
+
+<material name="wtblack">
+    <color rgba="0 0 0 0.8"/>
+</material>
+
+<material name="wtgreen">
+    <color rgba="0 1 0 0.8"/>
+</material>
+
+<material name="wtblue">
+    <color rgba="0 0 1 0.8"/>
+</material>
+
+<material name="wtpurple">
+    <color rgba="1 0 1 0.8"/>
+</material>
+
+<material name="invisible">
+    <color rgba="1 1 1 .5"/>
+</material>
+
+</robot>
