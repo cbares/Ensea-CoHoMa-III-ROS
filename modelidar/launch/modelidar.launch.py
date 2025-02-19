@@ -22,6 +22,12 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
+package_name = 'modelidar'
+urdf_default_file_name = 'wild_thumper.urdf.xacro'
+rviz_default_file_name = 'wild_thumper.rviz'
+controller_file = 'modelidar_controllers.yaml'
+prefix = ""
+
 def generate_launch_description():
     # Declare arguments
     declared_arguments = []
@@ -39,10 +45,18 @@ def generate_launch_description():
             description="Start robot with mock hardware mirroring command to its states.",
         )
     )
-
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value="false",
+            description='Use simulation (Gazebo) clock if true',
+        )
+    )
+    
     # Initialize Arguments
     gui = LaunchConfiguration("gui")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    use_sim_time = LaunchConfiguration('use_sim_time')
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -50,38 +64,42 @@ def generate_launch_description():
             PathJoinSubstitution([FindExecutable(name="xacro")]),
             " ",
             PathJoinSubstitution(
-                [FindPackageShare("modelidar"), "urdf", "wild_thumper.urdf.xacro"]
+                [FindPackageShare(package_name), "urdf", urdf_default_file_name]
             ),
             " ",
             "use_mock_hardware:=",
             use_mock_hardware,
+            " ",
+            "prefix:=",
+            prefix,
         ]
     )
     robot_description = {"robot_description": robot_description_content}
 
     robot_controllers = PathJoinSubstitution(
-        [
-            FindPackageShare("modelidar"),
-            "config",
-            "modelidar_controllers.yaml",
-        ]
+        [FindPackageShare(package_name), "config", controller_file]
     )
+    
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("modelidar"), "urdf", "wild_thumper.rviz"]
+        [FindPackageShare(package_name), "urdf", rviz_default_file_name]
     )
 
+    # Nodes
+    # Controller Manager
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
         parameters=[robot_controllers],
         output="both",
     )
+    # Robot State Publisher from URDF
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
     )
+    # RViz
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",
@@ -101,11 +119,11 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "modelidar_base_controller",
+            f"{package_name}_base_controller",
             "--param-file",
             robot_controllers,
             "--controller-ros-args",
-            "-r /modelidar_base_controller/cmd_vel:=/cmd_vel",
+            f"-r /{package_name}_base_controller/cmd_vel:=/cmd_vel",
         ],
     )
 

@@ -36,6 +36,8 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-joy-teleop ros-${ROS_
 RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-urdf-tutorial ros-${ROS_DISTRO}-control-toolbox
 RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-rqt*
 
+RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers
+
 # Change the size of rviz window (hpi screen)
 RUN sed -i -e "s/1200/4000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
 RUN sed -i -e "s/800/2000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz

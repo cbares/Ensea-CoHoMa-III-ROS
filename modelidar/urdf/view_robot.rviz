@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /RobotModel1
         - /RobotModel1/Description Topic1
+        - /RobotModel1/Links1
       Splitter Ratio: 0.5
     Tree Height: 867
   - Class: rviz_common/Selection
@@ -117,6 +118,16 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        virtual_left_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        virtual_right_wheel:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
       Mass Properties:
         Inertia: false
         Mass: false
@@ -128,7 +139,7 @@ Visualization Manager:
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_imu_link
+    Fixed Frame: base_footprint
     Frame Rate: 30
   Name: root
   Tools:

@@ -77,7 +77,7 @@ def generate_launch_description():
             ),
             " ",
             "use_mock_hardware:=",
-            "true",
+            "false",
             " ", 
             "prefix:=",
             prefix,
@@ -87,20 +87,24 @@ def generate_launch_description():
     robot_description = {"robot_description": robot_description_content}
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(description_package), "modelidar/rviz", "view_robot.rviz"]
+        [FindPackageShare(description_package), "urdf", "view_robot.rviz"]
     )
 
+    # Nodes
+    # Joint State Publisher with GUI
     joint_state_publisher_node = Node(
         package="joint_state_publisher_gui",
         executable="joint_state_publisher_gui",
         condition=IfCondition(gui),
     )
+    # Robot State Publisher from URDF
     robot_state_publisher_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
     )
+    # RViz
     rviz_node = Node(
         package="rviz2",
         executable="rviz2",

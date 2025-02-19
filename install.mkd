@@ -46,3 +46,9 @@ ros2 launch modelidar demo_launch.py
 ```
 this example use the mock state publisher define in `modelidar/mock_state_publisher.py`
 
+
+## control startup:
+```sh
+ros2 launch modelidar view_robot.launch.py
+ros2 run controller_manager ros2_control_node
+```
