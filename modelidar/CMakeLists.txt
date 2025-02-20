@@ -73,13 +73,15 @@ install(
   DESTINATION include/modelidar
 )
 install(
-  DIRECTORY launch urdf
+  DIRECTORY launch urdf meshes
   DESTINATION share/modelidar
 )
 install(
   DIRECTORY config
   DESTINATION share/modelidar
 )
+
+
 install(TARGETS modelidar
   EXPORT export_modelidar
   ARCHIVE DESTINATION lib

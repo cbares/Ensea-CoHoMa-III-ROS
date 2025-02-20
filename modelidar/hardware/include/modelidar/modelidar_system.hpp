@@ -31,9 +31,21 @@
 #include "rclcpp_lifecycle/state.hpp"
 
 #include "modelidar/modelidar_comms.hpp"
+#include "modelidar/wheel.hpp"
 
 namespace modelidar
 {
+struct Config
+{
+  std::string left_wheel_name = "";
+  std::string right_wheel_name = ""; 
+  double loop_rate = 0.0;
+  std::string device = "";
+  int baud_rate = 0;
+  int timeout = 0;
+  int enc_counts_per_rev = 0;
+};
+
 class ModelidarSystemHardware : public hardware_interface::SystemInterface
 {
 public:
@@ -58,16 +70,10 @@ public:
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
-  // Parameters for the Modelidar simulation
-  double hw_start_sec_;
-  double hw_stop_sec_;
-  double loop_rate;
-  std::string device;
-  int baud_rate;
-  int timeout;
-  int enc_counts_per_rev;
+  Config cfg_;
   ModelibotComms comms_;
-
+  Wheel left_wheel_;
+  Wheel right_wheel_;
 };
 
 }  // namespace modelidar

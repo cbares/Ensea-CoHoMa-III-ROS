@@ -31,6 +31,7 @@
 
 namespace modelidar
 {
+
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
   const hardware_interface::HardwareInfo & info)
 {
@@ -41,12 +42,18 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  loop_rate = hardware_interface::stod(info_.hardware_parameters["loop_rate"]);
-  device = info_.hardware_parameters["device"];
-  baud_rate = std::stoi(info_.hardware_parameters["baud_rate"]);
-  timeout = std::stoi(info_.hardware_parameters["timeout"]);
-  enc_counts_per_rev = std::stoi(info_.hardware_parameters["enc_counts_per_rev"]);
+  // retrieve parameters from URDF (ros2_control section)
+  cfg_.left_wheel_name = info_.hardware_parameters["left_wheel_joint"]; //this value is also in controllers yaml file
+  cfg_.right_wheel_name = info_.hardware_parameters["right_wheel_joint"]; //this value is also in controllers yaml file
+  cfg_.loop_rate = hardware_interface::stod(info_.hardware_parameters["loop_rate"]);
+  cfg_.device = info_.hardware_parameters["device"];
+  cfg_.baud_rate = std::stoi(info_.hardware_parameters["baud_rate"]);
+  cfg_.timeout = std::stoi(info_.hardware_parameters["timeout"]);
+  cfg_.enc_counts_per_rev = std::stoi(info_.hardware_parameters["enc_counts_per_rev"]);
   
+  left_wheel_.setup(cfg_.left_wheel_name, cfg_.enc_counts_per_rev);
+  right_wheel_.setup(cfg_.right_wheel_name, cfg_.enc_counts_per_rev);
+
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
     // Modelidar has exactly two states and one command interface on each joint
@@ -89,14 +96,7 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
     }
   }
 
-  try {
-    comms_.connect(device, baud_rate, timeout);
-  } catch (const std::runtime_error &) {
-    RCLCPP_FATAL(get_logger(), "Could not connect to device %s at %d baud", device.c_str(), baud_rate);
-    return hardware_interface::CallbackReturn::ERROR;
-  }
-
-  RCLCPP_INFO(get_logger(), "Connected to device %s at %d baud", device.c_str(), baud_rate);
+  RCLCPP_INFO(get_logger(), "Initialized ModelidarSystemHardware");
 
   return hardware_interface::CallbackReturn::SUCCESS;
 }
@@ -121,12 +121,12 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_configure(
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // command and state should be equal when starting
-  for (const auto & [name, descr] : joint_command_interfaces_)
-  {
-    set_command(name, get_state(name));
+  try {
+    comms_.connect(cfg_.device, cfg_.baud_rate, cfg_.timeout);
+  } catch (const std::runtime_error &) {
+    RCLCPP_FATAL(get_logger(), "Could not connect to device %s at %d baud", cfg_.device.c_str(), cfg_.baud_rate);
+    return hardware_interface::CallbackReturn::ERROR;
   }
-
   RCLCPP_INFO(get_logger(), "Successfully activated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -136,7 +136,6 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
   comms_.disconnect();
-
   RCLCPP_INFO(get_logger(), "Successfully deactivated!");
 
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -146,23 +145,27 @@ hardware_interface::return_type ModelidarSystemHardware::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   double posL, posR, velL, velR;
-  comms_.get_state_values(posL, posR, velL, velR);
+  std::string resp = comms_.get_state_values(posL, posR, velL, velR);
 
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
   ss << "Reading states:";
   ss << std::fixed << std::setprecision(2);
-  for (const auto & [name, descr] : joint_state_interfaces_)
-  {
-    if (name == "virtual_left_wheel_joint/position") {set_state(name, posL);}
-    if (name == "virtual_right_wheel_joint/position") {set_state(name, posR);}
-    if (name == "virtual_left_wheel_joint/velocity") {set_state(name, velL);}
-    if (name == "virtual_right_wheel_joint/velocity") {set_state(name, velR);}
 
-    ss << std::endl
-       << "\t state " << get_state(name) << " for '" << name << "'!";
-    
+  try{
+    set_state(left_wheel_.position_name, posL);
+    set_state(right_wheel_.position_name, posR);
+    set_state(left_wheel_.velocity_name, velL);
+    set_state(right_wheel_.velocity_name, velR);
+  } catch (std::out_of_range &) {
+    ss << std::endl << "State interface not found during read :" << left_wheel_.position_name << " or " << right_wheel_.velocity_name;
   }
+  
+  ss << std::endl << "Left wheel - Position: " << posL << " Velocity: " << velL;
+  ss << std::endl << "Right wheel - Position: " << posR << " Velocity: " << velR;
+
+  ss << std::endl << "Response: " << resp;
+
   RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
@@ -180,19 +183,11 @@ hardware_interface::return_type ModelidarSystemHardware::write(
   double right = 0.0;
 
   ss << "Writing commands:";
-  for (const auto & [name, descr] : joint_command_interfaces_)
-  {
-    // Simulate sending commands to the hardware
-    set_state(name, get_command(name));
-    if (name == "virtual_left_wheel_joint/position"){
-      left = get_command(name);
-    }
-    if (name == "virtual_right_wheel_joint/position"){
-      right = get_command(name);
-    }
-
-    ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << "command (" << descr.get_interface_name() << ")" << get_command(name) << " for '" << name << "'!";
+  try{
+    left = get_command(left_wheel_.velocity_name);
+    right = get_command(right_wheel_.velocity_name);
+  } catch (std::out_of_range &) {
+       ss << std::endl << "Command interface not found during write"; 
   }
 
   std::string response = comms_.set_motor_speed(left, right);

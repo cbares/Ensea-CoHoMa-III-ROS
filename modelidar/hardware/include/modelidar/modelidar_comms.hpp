@@ -31,7 +31,7 @@ constexpr auto& STATE_PATTERN = "!%04d,%04d L:%+d,%+d R:%+d,%+d\r";
 constexpr auto& STATE_REGEX = "!(\\d{4}),(\\d{4}) L:([+-]?\\d+),([+-]?\\d+) R:([+-]?\\d+),([+-]?\\d+)";
 constexpr auto& ENCODER_REGEX = "!\\d{4},\\d{4} L:[+-]?\\d+,([+-]?\\d+) R:[+-]?\\d+,([+-]?\\d+)";
 
-const int STEPS = 1000; // PWM steps
+const double STEPS = 1000; // PWM steps
 // Motor specs
 const double Kv = 295 / 6 * 2 * M_PI / 60; // DAGU WT341 Motor: 295 RPM@6V
 const double Vo = 7.0; // Operating voltage (min)
@@ -185,15 +185,19 @@ public:
     }
   }
 
-  void get_state_values(double &pos_L, double &pos_R, double &vel_L, double &vel_R)
+  std::string get_state_values(double &pos_L, double &pos_R, double &vel_L, double &vel_R)
   {
     int pos_L_enc, pos_R_enc, vel_L_enc, vel_R_enc;
     read_full_state(pos_L_enc, pos_R_enc, vel_L_enc, vel_R_enc);
 
-    pos_L = pos_L_enc / counts_per_rev * 2 * M_PI;
-    pos_R = pos_R_enc / counts_per_rev * 2 * M_PI;
-    vel_L = vel_L_enc / counts_per_rev * 2 * M_PI;
-    vel_R = vel_R_enc / counts_per_rev * 2 * M_PI;
+    pos_L = ((double)pos_L_enc) / counts_per_rev * 2 * M_PI;
+    pos_R = ((double)pos_R_enc) / counts_per_rev * 2 * M_PI;
+    vel_L = ((double)vel_L_enc) / counts_per_rev * 2 * M_PI;
+    vel_R = ((double)vel_R_enc) / counts_per_rev * 2 * M_PI;
+
+    std::stringstream ss;
+    ss << "L: " << pos_L_enc << " " << vel_L_enc << " R: " << pos_R_enc << " " << vel_R_enc;
+    return ss.str();
   }
 
   std::string set_motor_values(int val_L, int val_R)
@@ -201,19 +205,26 @@ public:
     std::stringstream ss;
     ss << "#" 
       << std::setfill('0') << std::setw(4)
-      << val_L << "," << val_R << "\r";
-    return send_msg(ss.str());
+      << val_L << "," 
+      << std::setfill('0') << std::setw(4)
+      << val_R << "\r";
+    send_msg(ss.str());
+    return (ss.str());
   }
 
-  std::string set_motor_speed(int speed_L, int speed_R)
+  std::string set_motor_speed(double speed_L, double speed_R)
   {
     // speed in rad/s, need to be convert to PWM duty cycle beteween 0 and STEPS
     // speed / Wmax => [-1, +1]
     // speed / Wmax * STEPS/2 + STEPS/2 => [0, STEPS]
-    int pwm_L = speed_L / Wmax * STEPS/2 + STEPS/2;
-    int pwm_R = speed_R / Wmax * STEPS/2 + STEPS/2;
+    int pwm_L = (speed_L / Wmax) * STEPS/2 + STEPS/2;
+    int pwm_R = (speed_R / Wmax) * STEPS/2 + STEPS/2;
+    if (pwm_L > STEPS) pwm_L = STEPS;
+    if (pwm_L < 0) pwm_L = 0;
+    if (pwm_R > STEPS) pwm_R = STEPS;
+    if (pwm_R < 0) pwm_R = 0;
 
-    return set_motor_values(pwm_L, pwm_R);
+    return set_motor_values(pwm_L, pwm_R);;
   }
 
   void set_pid_values(int k_p, int k_d, int k_i, int k_o)

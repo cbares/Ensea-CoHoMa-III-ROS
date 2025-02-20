@@ -18,6 +18,7 @@ services:
       - /dev/dri:/dev/dri:cached
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
       - /dev/input:/dev/input:bind
+      - dev/ttyACM0:/dev/ttyACM0:bind
       - /run/user/1000:/run/user/1000
     network_mode: host
     user: theseus
