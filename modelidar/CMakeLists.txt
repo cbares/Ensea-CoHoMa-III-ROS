@@ -30,6 +30,7 @@ find_package(ament_cmake REQUIRED)
 foreach(Dependency IN ITEMS ${THIS_PACKAGE_INCLUDE_DEPENDS})
   find_package(${Dependency} REQUIRED)
 endforeach()
+find_package(cxx-serial REQUIRED)
 
 ## COMPILE
 add_library(
@@ -37,6 +38,9 @@ add_library(
   SHARED
   hardware/modelidar_system.cpp
 )
+
+target_link_libraries(modelidar PRIVATE cxx-serial)
+
 
 # target_compile_definitions(modelidar
 # PRIVATE "DEMO_NODES_CPP_BUILDING_DLL")

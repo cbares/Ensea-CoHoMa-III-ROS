@@ -27,6 +27,8 @@
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "rclcpp/rclcpp.hpp"
 
+#include "modelidar/modelidar_comms.hpp"
+
 namespace modelidar
 {
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
@@ -39,26 +41,23 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  hw_start_sec_ =
-    hardware_interface::stod(info_.hardware_parameters["example_param_hw_start_duration_sec"]);
-  hw_stop_sec_ =
-    hardware_interface::stod(info_.hardware_parameters["example_param_hw_stop_duration_sec"]);
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
+  loop_rate = hardware_interface::stod(info_.hardware_parameters["loop_rate"]);
+  device = info_.hardware_parameters["device"];
+  baud_rate = std::stoi(info_.hardware_parameters["baud_rate"]);
+  timeout = std::stoi(info_.hardware_parameters["timeout"]);
+  enc_counts_per_rev = std::stoi(info_.hardware_parameters["enc_counts_per_rev"]);
+  
   for (const hardware_interface::ComponentInfo & joint : info_.joints)
   {
-    // DiffBotSystem has exactly two states and one command interface on each joint
-    if (joint.command_interfaces.size() != 1)
-    {
+    // Modelidar has exactly two states and one command interface on each joint
+    if (joint.command_interfaces.size() != 1) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' has %zu command interfaces found. 1 expected.",
         joint.name.c_str(), joint.command_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY)
-    {
+    if (joint.command_interfaces[0].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' have %s command interfaces found. '%s' expected.",
         joint.name.c_str(), joint.command_interfaces[0].name.c_str(),
@@ -66,16 +65,14 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.state_interfaces.size() != 2)
-    {
+    if (joint.state_interfaces.size() != 2) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' has %zu state interface. 2 expected.", joint.name.c_str(),
         joint.state_interfaces.size());
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION)
-    {
+    if (joint.state_interfaces[0].name != hardware_interface::HW_IF_POSITION) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' have '%s' as first state interface. '%s' expected.",
         joint.name.c_str(), joint.state_interfaces[0].name.c_str(),
@@ -83,8 +80,7 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY)
-    {
+    if (joint.state_interfaces[1].name != hardware_interface::HW_IF_VELOCITY) {
       RCLCPP_FATAL(
         get_logger(), "Joint '%s' have '%s' as second state interface. '%s' expected.",
         joint.name.c_str(), joint.state_interfaces[1].name.c_str(),
@@ -93,22 +89,21 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
     }
   }
 
+  try {
+    comms_.connect(device, baud_rate, timeout);
+  } catch (const std::runtime_error &) {
+    RCLCPP_FATAL(get_logger(), "Could not connect to device %s at %d baud", device.c_str(), baud_rate);
+    return hardware_interface::CallbackReturn::ERROR;
+  }
+
+  RCLCPP_INFO(get_logger(), "Connected to device %s at %d baud", device.c_str(), baud_rate);
+
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_configure(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(get_logger(), "Configuring ...please wait...");
-
-  for (int i = 0; i < hw_start_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   // reset values always when configuring hardware
   for (const auto & [name, descr] : joint_state_interfaces_)
   {
@@ -126,16 +121,6 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_configure(
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(get_logger(), "Activating ...please wait...");
-
-  for (auto i = 0; i < hw_start_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_start_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
-
   // command and state should be equal when starting
   for (const auto & [name, descr] : joint_command_interfaces_)
   {
@@ -150,15 +135,7 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_activate(
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  RCLCPP_INFO(get_logger(), "Deactivating ...please wait...");
-
-  for (auto i = 0; i < hw_stop_sec_; i++)
-  {
-    rclcpp::sleep_for(std::chrono::seconds(1));
-    RCLCPP_INFO(get_logger(), "%.1f seconds left...", hw_stop_sec_ - i);
-  }
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  comms_.disconnect();
 
   RCLCPP_INFO(get_logger(), "Successfully deactivated!");
 
@@ -166,26 +143,25 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_deactivate(
 }
 
 hardware_interface::return_type ModelidarSystemHardware::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  double posL, posR, velL, velR;
+  comms_.get_state_values(posL, posR, velL, velR);
+
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
   ss << "Reading states:";
   ss << std::fixed << std::setprecision(2);
   for (const auto & [name, descr] : joint_state_interfaces_)
   {
-    if (descr.get_interface_name() == hardware_interface::HW_IF_POSITION)
-    {
-      // Simulate DiffBot wheels's movement as a first-order system
-      // Update the joint status: this is a revolute joint without any limit.
-      // Simply integrates
-      auto velo = get_command(descr.get_prefix_name() + "/" + hardware_interface::HW_IF_VELOCITY);
-      set_state(name, get_state(name) + period.seconds() * velo);
+    if (name == "virtual_left_wheel_joint/position") {set_state(name, posL);}
+    if (name == "virtual_right_wheel_joint/position") {set_state(name, posR);}
+    if (name == "virtual_left_wheel_joint/velocity") {set_state(name, velL);}
+    if (name == "virtual_right_wheel_joint/velocity") {set_state(name, velR);}
 
-      ss << std::endl
-         << "\t position " << get_state(name) << " and velocity " << velo << " for '" << name
-         << "'!";
-    }
+    ss << std::endl
+       << "\t state " << get_state(name) << " for '" << name << "'!";
+    
   }
   RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   // END: This part here is for exemplary purposes - Please do not copy to your production code
@@ -196,18 +172,33 @@ hardware_interface::return_type ModelidarSystemHardware::read(
 hardware_interface::return_type ModelidarSystemHardware::write(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  // call to set_motor_values(left, right);
+
   // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
   std::stringstream ss;
+  double left = 0.0;
+  double right = 0.0;
+
   ss << "Writing commands:";
   for (const auto & [name, descr] : joint_command_interfaces_)
   {
     // Simulate sending commands to the hardware
     set_state(name, get_command(name));
+    if (name == "virtual_left_wheel_joint/position"){
+      left = get_command(name);
+    }
+    if (name == "virtual_right_wheel_joint/position"){
+      right = get_command(name);
+    }
 
     ss << std::fixed << std::setprecision(2) << std::endl
-       << "\t" << "command " << get_command(name) << " for '" << name << "'!";
+       << "\t" << "command (" << descr.get_interface_name() << ")" << get_command(name) << " for '" << name << "'!";
   }
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
+
+  std::string response = comms_.set_motor_speed(left, right);
+  ss << std::endl << "Response: " << response;
+
+  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000, "%s", ss.str().c_str());
   // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;

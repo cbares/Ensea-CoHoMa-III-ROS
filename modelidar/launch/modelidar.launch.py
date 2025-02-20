@@ -24,7 +24,7 @@ from launch_ros.substitutions import FindPackageShare
 
 package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
-rviz_default_file_name = 'wild_thumper.rviz'
+rviz_default_file_name = 'view_robot.rviz'
 controller_file = 'modelidar_controllers.yaml'
 prefix = ""
 
@@ -89,7 +89,8 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
+        parameters=[{'robot_description': robot_description},
+                    robot_controllers],
         output="both",
     )
     # Robot State Publisher from URDF
@@ -123,7 +124,7 @@ def generate_launch_description():
             "--param-file",
             robot_controllers,
             "--controller-ros-args",
-            f"-r /{package_name}_base_controller/cmd_vel:=/cmd_vel",
+            f"-r /{package_name}_base_controller/cmd_vel:=/cmd_vel", # remap to /cmd_vel
         ],
     )
 

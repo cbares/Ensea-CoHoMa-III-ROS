@@ -30,6 +30,8 @@
 #include "rclcpp_lifecycle/node_interfaces/lifecycle_node_interface.hpp"
 #include "rclcpp_lifecycle/state.hpp"
 
+#include "modelidar/modelidar_comms.hpp"
+
 namespace modelidar
 {
 class ModelidarSystemHardware : public hardware_interface::SystemInterface
@@ -59,6 +61,13 @@ private:
   // Parameters for the Modelidar simulation
   double hw_start_sec_;
   double hw_stop_sec_;
+  double loop_rate;
+  std::string device;
+  int baud_rate;
+  int timeout;
+  int enc_counts_per_rev;
+  ModelibotComms comms_;
+
 };
 
 }  // namespace modelidar

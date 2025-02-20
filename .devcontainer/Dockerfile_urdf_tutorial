@@ -37,11 +37,13 @@ RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-urdf-tutorial ros-${
 RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-rqt*
 
 RUN apt-get upgrade && apt-get install -y ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers
+RUN apt-get upgrade && apt-get install -y libcxx-serial-dev libcxx-serial1
 
 # Change the size of rviz window (hpi screen)
 RUN sed -i -e "s/1200/4000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
 RUN sed -i -e "s/800/2000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
 
+ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}
 RUN mkdir -p /home/${USERNAME}/ws/src
 WORKDIR /home/${USERNAME}/ws

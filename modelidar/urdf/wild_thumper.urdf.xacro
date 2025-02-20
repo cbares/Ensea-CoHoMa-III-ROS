@@ -7,6 +7,7 @@
 
 	<xacro:property name="wheelbase" value="0.24" />
 	<xacro:property name="wheel_radius" value="0.05" />
+	<xacro:property name="base_link_z" value="0.082" />
 
 	<!-- Import Rviz colors -->
 	<xacro:include filename="materials.xacro" />
@@ -84,13 +85,13 @@
 	<joint name="$(arg prefix)base_link_joint" type="fixed">
 		<parent link="$(arg prefix)base_footprint"/>
 		<child link="$(arg prefix)base_link"/>
-		<origin xyz="0.0 0.0 0.082" rpy="0 0 0"/>
+		<origin xyz="0.0 0.0 ${base_link_z}" rpy="0 0 0"/>
 	</joint>
 
 	<joint name="$(arg prefix)mounting_plate_joint" type="fixed">
 		<parent link="$(arg prefix)base_link"/>
 		<child link="$(arg prefix)mounting_plate"/>
-		<origin xyz="0.0 0.0 0.044" rpy="0 0 0"/>
+		<origin xyz="0.0 0.0 ${0.044+0.03}" rpy="0 0 0"/>
 	</joint>
 
 	<joint name="$(arg prefix)imu_joint" type="fixed">
@@ -169,7 +170,7 @@
 		</visual>
 		</link>
 		<joint name="${prefix}virtual_${side}_wheel_joint" type="continuous">
-		<parent link="${prefix}base_footprint"/>
+		<parent link="${prefix}base_link"/>
 		<child link="${ prefix}virtual_${side}_wheel"/>
 		<origin xyz="${xyz}" rpy="0 0 0"/>
 		<axis xyz="0 1 0"/>
@@ -179,12 +180,13 @@
 	</xacro:macro>
 
 
+
 	<xacro:wheel prefix="$(arg prefix)" pos="rear" side="left"   xyz="-0.07525  +${wheelbase/2} -0.025" rpy="${-5*PI/180} 0 0" /> <!-- rear_left_wheel -->
 	<xacro:wheel prefix="$(arg prefix)" pos="rear" side="right"  xyz="-0.07525 -${wheelbase/2} -0.025" rpy="${5*PI/180} 0 0" /> <!-- rear_right_wheel -->
 	<xacro:wheel prefix="$(arg prefix)" pos="front" side="left"  xyz=" 0.07525  +${wheelbase/2} -0.025" rpy="${-5*PI/180} 0 0" /> <!-- front_left_wheel -->
 	<xacro:wheel prefix="$(arg prefix)" pos="front" side="right" xyz=" 0.07525 -${wheelbase/2} -0.025" rpy="${5*PI/180} 0 0" /> <!-- front_right_wheel -->
-	<xacro:virtual_wheel prefix="$(arg prefix)" side="left" xyz="0 +${wheelbase/2} ${wheel_radius}"/> <!-- virtual_left_wheel -->
-	<xacro:virtual_wheel prefix="$(arg prefix)" side="right" xyz="0 -${wheelbase/2} ${wheel_radius}"/> <!-- virtual_right_wheel -->
+	<xacro:virtual_wheel prefix="$(arg prefix)" side="left" xyz="0 +${wheelbase/2} ${wheel_radius-base_link_z}"/> <!-- virtual_left_wheel -->
+	<xacro:virtual_wheel prefix="$(arg prefix)" side="right" xyz="0 -${wheelbase/2} ${wheel_radius-base_link_z}"/> <!-- virtual_right_wheel -->
 
 	
 	<gazebo>

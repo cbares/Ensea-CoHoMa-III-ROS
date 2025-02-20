@@ -1,5 +1,7 @@
 # TODO:
 
-* explicit auto startup procedure
+* explicit auto startup procedure (modelidar.launch.py)
 * set xacro files for wheeltec rosbot plus
-* fiw CMakeLists.txt for ros control
+* fix CMakeLists.txt for ros control
+* fix modelidar.launch.py dalyed action and spawner
+* use DEBUG Log Level: --ros-args --log-level debug

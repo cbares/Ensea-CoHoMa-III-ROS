@@ -13,6 +13,11 @@
           <plugin>modelidar/ModelidarSystemHardware</plugin>
           <param name="example_param_hw_start_duration_sec">0</param>
           <param name="example_param_hw_stop_duration_sec">3.0</param>
+          <param name="loop_rate">30</param>
+          <param name="device">/dev/ttyACM0</param>
+          <param name="baud_rate">115200</param>
+          <param name="timeout">1000</param>
+          <param name="enc_counts_per_rev">544</param> <!-- 16x34 for encoder DAGU RS003-Enco -->
         </hardware>
       </xacro:unless>
       <!-- <xacro:if value="${use_mock_hardware}">
