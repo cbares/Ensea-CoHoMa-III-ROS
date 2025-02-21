@@ -20,12 +20,12 @@
           <param name="enc_counts_per_rev">544</param> <!-- 16x34 for encoder DAGU RS003-Enco -->
         </hardware>
       </xacro:unless>
-      <!-- <xacro:if value="${use_mock_hardware}">
+      <xacro:if value="${use_mock_hardware}">
         <hardware>
           <plugin>mock_components/GenericSystem</plugin>
           <param name="calculate_dynamics">true</param>
         </hardware>
-      </xacro:if> -->
+      </xacro:if>
       <joint name="${prefix}virtual_left_wheel_joint">
         <command_interface name="velocity"/>
         <state_interface name="position"/>

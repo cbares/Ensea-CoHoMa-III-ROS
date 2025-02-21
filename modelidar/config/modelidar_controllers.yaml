@@ -8,12 +8,12 @@ controller_manager:
 
     modelidar_base_controller:
       type: diff_drive_controller/DiffDriveController
-
+    
 
 modelidar_base_controller:
   ros__parameters:
 
-    use_stamped_vel: false
+    # use_stamped_vel: true # no more used since jazzy
 
     left_wheel_names: ["virtual_left_wheel_joint"]
     right_wheel_names: ["virtual_right_wheel_joint"]
@@ -32,7 +32,7 @@ modelidar_base_controller:
     pose_covariance_diagonal : [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
     twist_covariance_diagonal: [0.001, 0.001, 0.001, 0.001, 0.001, 0.01]
 
-    open_loop: true
+    open_loop: false
     enable_odom_tf: true
 
     cmd_vel_timeout: 0.5

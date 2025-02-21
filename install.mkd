@@ -52,3 +52,17 @@ this example use the mock state publisher define in `modelidar/mock_state_publis
 ros2 launch modelidar view_robot.launch.py
 ros2 run controller_manager ros2_control_node
 ```
+
+## start with teleop_twist_keyboard
+```sh
+ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --params-file teleop.yaml
+```
+(needed for stamped twist messages)
+
+
+## Foxglove
+```sh
+sudo apt install ros-$ROS_DISTRO-foxglove-bridge
+ros2 launch foxglove_bridge foxglove_bridge_launch.xml
+```

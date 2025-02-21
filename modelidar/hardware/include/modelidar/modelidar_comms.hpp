@@ -37,6 +37,7 @@ const double Kv = 295 / 6 * 2 * M_PI / 60; // DAGU WT341 Motor: 295 RPM@6V
 const double Vo = 7.0; // Operating voltage (min)
 const double Wmax = Kv * Vo; // Max angular velocity
 const int counts_per_rev = 544; // Encoder counts per revolution
+const double VEL_PERIOD = 0.1; // Velocity control frequency, in seconds
 
 
 /**
@@ -192,8 +193,8 @@ public:
 
     pos_L = ((double)pos_L_enc) / counts_per_rev * 2 * M_PI;
     pos_R = ((double)pos_R_enc) / counts_per_rev * 2 * M_PI;
-    vel_L = ((double)vel_L_enc) / counts_per_rev * 2 * M_PI;
-    vel_R = ((double)vel_R_enc) / counts_per_rev * 2 * M_PI;
+    vel_L = ((double)vel_L_enc) / counts_per_rev * 2 * M_PI / VEL_PERIOD;
+    vel_R = ((double)vel_R_enc) / counts_per_rev * 2 * M_PI / VEL_PERIOD;
 
     std::stringstream ss;
     ss << "L: " << pos_L_enc << " " << vel_L_enc << " R: " << pos_R_enc << " " << vel_R_enc;

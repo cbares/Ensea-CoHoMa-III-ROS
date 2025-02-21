@@ -91,7 +91,7 @@
 	<joint name="$(arg prefix)mounting_plate_joint" type="fixed">
 		<parent link="$(arg prefix)base_link"/>
 		<child link="$(arg prefix)mounting_plate"/>
-		<origin xyz="0.0 0.0 ${0.044+0.03}" rpy="0 0 0"/>
+		<origin xyz="0.0 0.0 ${0.044+0.02}" rpy="0 0 0"/>
 	</joint>
 
 	<joint name="$(arg prefix)imu_joint" type="fixed">
