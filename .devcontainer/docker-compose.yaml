@@ -3,8 +3,10 @@ name: Modelibot
 services:
   ros_container:
     build:
-      context: .
-      dockerfile: Dockerfile_urdf_tutorial
+      context: ../
+      additional_contexts:
+        source: ../modelidar
+      dockerfile: .devcontainer/Dockerfile
       args:
         USERNAME: $_ROS_USER
     privileged: true
@@ -23,6 +25,7 @@ services:
     network_mode: host
     user: theseus
     command: /bin/bash
+    tty: true
     deploy:
       resources:
         reservations:

@@ -56,7 +56,7 @@ ros2 run controller_manager ros2_control_node
 ## start with teleop_twist_keyboard
 ```sh
 ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true
-ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --params-file teleop.yaml
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --params-file install/modelidar/share/modelidar/config/teleop.yaml
 ```
 (needed for stamped twist messages)
 

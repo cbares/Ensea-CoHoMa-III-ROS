@@ -169,7 +169,7 @@ public:
     std::string response = send_msg(QUERY);
 
     // State return:      !0500,0500 L:+0,+0 R:+0,+0
-    // Groups:              -1-  -2-   -3-4-   -5-6-
+    // Groups:              -1-  -2-   -3--4-  -5--6-
     // Command positions:  ^^^^ ^^^^
     // Speed positions:                ^^      ^^
     // Encoder positions:                 ^^      ^^
