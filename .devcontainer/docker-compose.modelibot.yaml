@@ -14,8 +14,7 @@ services:
       DISPLAY: $DISPLAY
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_DOMAIN_ID: "0"
-      #ROS_STATIC_PEERS: "10.0.4.101;10.0.4.114"
-      ROS_DISCOVERY_SERVER: "10.0.4.114:11811;10.0.4.101:11881"
+      ROS_DISCOVERY_SERVER: "10.0.4.114:11811;10.0.4.101:11881;10.0.4.116:11811"
       #FASTDDS_BUILTIN_TRANSPORTs: "LARGE_DATA"
       #ROS_SUPER_CLIENT: true
       RMW_IMPLEMENTATION: rmw_fastrtps_cpp
@@ -33,10 +32,3 @@ services:
     pid: "host"
     user: theseus
     tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
