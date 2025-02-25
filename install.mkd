@@ -1,11 +1,21 @@
 # Docker
 
+install docker:
+```sh
+sudo curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+echo   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian \
+$(. /etc/os-release && echo "$VERSION_CODENAME") stable" |   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
+
 ## startup
 
 ```console
 docker compose build
 docker compose run --remove-orphans  ros_container bash
 ```
+
 
 ## Starting ros2 package
 
@@ -73,7 +83,7 @@ Docker container use its own ipc and pid. First process in the container will be
 ROS2 use IPC to comunicate between node on the same host, and pid help to differentiate nodes. 
 
 Thus, for executing 2 nodes in 2 different container on the same host, and continue to be visible on network, it's needed to add:
-```
+```yaml
 services:
   ipc: "host"
   pid: "host"
@@ -81,7 +91,7 @@ services:
 ```
 
 ROS2, by default use multicast to discover other nodes on other hosts. It's does'nt work very well with previous config, and it's worst on a wifi network. That's why, a solution can be!
-```
+```yaml
 services:
   build:
     environment:
@@ -89,3 +99,28 @@ services:
 ```
 This will block multicast request.
 To contact other host in this case, it's needed to add `ROS_STATIC_PEERS` in environment
+
+
+### Deploy with RT kernel
+
+```sh
+sudo addgroup realtime
+sudo usermod -a -G realtime $(whoami)
+```
+
+Add in `/etc/security/limits.conf`:
+```
+@realtime soft rtprio 99
+@realtime soft priority 99
+@realtime soft memlock unlimited
+@realtime hard rtprio 99
+@realtime hard priority 99
+@realtime hard memlock unlimited
+```
+
+
+sudo adduser pi docker
+docker compose -f .devcontainer/docker-compose.modelibot.yaml build
+docker compose -f .devcontainer/docker-compose.modelibot.yaml up
+```
+

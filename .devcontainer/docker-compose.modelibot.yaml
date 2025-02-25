@@ -11,7 +11,7 @@ services:
         USERNAME: $_ROS_USER
     privileged: true
     environment:
-      DISPLAY: $DISPLAY
+      # DISPLAY: $DISPLAY
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_DOMAIN_ID: "0"
       ROS_DISCOVERY_SERVER: "10.0.4.114:11811;10.0.4.101:11881;10.0.4.116:11811"
@@ -32,3 +32,4 @@ services:
     pid: "host"
     user: theseus
     tty: true
+    command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"
