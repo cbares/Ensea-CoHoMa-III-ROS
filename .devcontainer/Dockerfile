@@ -57,20 +57,28 @@ RUN mkdir -p /home/${USERNAME}/ws/src
 WORKDIR /home/${USERNAME}/ws
 
 RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --ignore-src -y && sudo chown -R $(whoami) /home/${USERNAME}/ws/
-RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.bashrc
-RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
+RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
+RUN grep -qF 'TAG2' $HOME/.profile || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.profile
 
 SHELL ["/bin/bash", "--login", "-c"] 
 
-# ADD modelidar /home/${USERNAME}/ws/src/
-
 RUN --mount=type=bind,source=modelidar,target=src/modelidar \
-    /bin/bash -c "source /opt/ros/${ROS_DISTRO}/setup.bash; colcon build"  
-
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build"  
 
 # [Optional] Set the default user. Omit if you want to keep the default as root.
-CMD ["/bin/bash"]
 
-# CMD ros2 launch modelidar modelidar.launch.py
+
+#ENTRYPOINT ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true 
+
+COPY --chmod=+x <<-"EOF" /entrypoint.sh
+#!/bin/bash
+source /opt/ros/${ROS_DISTRO}/setup.bash
+source ~/ws/install/setup.bash
+exec "$@"
+EOF
+
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
+
 
 # ENTRYPOINT ["tail", "-f", "/dev/null"]

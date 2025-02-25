@@ -13,7 +13,10 @@ services:
     environment:
       DISPLAY: $DISPLAY
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
-      ROS_DOMAIN_ID: "42"
+      ROS_DOMAIN_ID: "0"
+      ROS_STATIC_PEERS: "10.0.4.101;10.0.4.114"
+      #RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+      #FASTRTPS_DEFAULT_PROFILES_FILE=/home/$_ROS_USER/fastdds_default_profiles.xml
     volumes:
       - ../:/home/$_ROS_USER/ws/src:cached
       - /tmp/.X11-unix:/tmp/.X11-unix:cached
@@ -22,9 +25,10 @@ services:
       - /dev/input:/dev/input:bind
       - /dev/ttyACM0:/dev/ttyACM0:bind
       - /run/user/1000:/run/user/1000
-    network_mode: host
+    network_mode: "host"
+    ipc: "host"
+    pid: "host"
     user: theseus
-    command: /bin/bash
     tty: true
     deploy:
       resources:

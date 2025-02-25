@@ -66,3 +66,26 @@ ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args --params-file in
 sudo apt install ros-$ROS_DISTRO-foxglove-bridge
 ros2 launch foxglove_bridge foxglove_bridge_launch.xml
 ```
+
+
+Docker container use its own ipc and pid. First process in the container will be started with pid=1.
+
+ROS2 use IPC to comunicate between node on the same host, and pid help to differentiate nodes. 
+
+Thus, for executing 2 nodes in 2 different container on the same host, and continue to be visible on network, it's needed to add:
+```
+services:
+  ipc: "host"
+  pid: "host"
+  network_mode: "host"
+```
+
+ROS2, by default use multicast to discover other nodes on other hosts. It's does'nt work very well with previous config, and it's worst on a wifi network. That's why, a solution can be!
+```
+services:
+  build:
+    environment:
+      ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
+```
+This will block multicast request.
+To contact other host in this case, it's needed to add `ROS_STATIC_PEERS` in environment

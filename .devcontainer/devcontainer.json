@@ -1,25 +1,16 @@
 {
     "name": "ROS 2 Development Container",
-    // "privileged": true,
     "remoteUser": "theseus",
     "dockerComposeFile": "docker-compose.yaml",
     "service": "ros_container",
-    // "build": {
-    //     "dockerfile": "Dockerfile_tmp",
-    //     "args": {
-    //         "USERNAME": "theseus"
-    //     }
-    // },
     "workspaceFolder": "/home/theseus/ws",
-    //"workspaceMount": "source=${localWorkspaceFolder},target=/home/theseus/ws/src,type=bind",
     "customizations": {
         "vscode": {
             "extensions":[
                 "ms-vscode.cpptools-extension-pack",
                 "donjayamanne.python-extension-pack",
                 "eamodio.gitlens",
-                "ms-iot.vscode-ros",
-                "ms-azuretools.vscode-docker"
+                "ms-iot.vscode-ros"
             ],
             "settings": {
                 "C_Cpp.default.includePath": [
@@ -29,20 +20,5 @@
                 ]
             }
         }
-    }//,
-    // "containerEnv": {
-    //     "DISPLAY": "unix:0",
-    //     "ROS_AUTOMATIC_DISCOVERY_RANGE": "LOCALHOST",
-    //     "ROS_DOMAIN_ID": "42"
-    // },
-    // "runArgs": [
-    //     "--net=host",
-    //     "-e", "DISPLAY=${env:DISPLAY}"
-    // ],
-    // "mounts": [
-    //     "source=/tmp/.X11-unix,target=/tmp/.X11-unix,type=bind,consistency=cached",
-    //     "source=/dev/dri,target=/dev/dri,type=bind,consistency=cached"
-    // ]
-    // "postCreateCommand": "rosdep update && rosdep install --from-paths src --ignore-src -y && sudo chown -R $(whoami) ~/ws/",
-    // "postAttachCommand": "grep -qF 'TAG' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG' >> $HOME/.bashrc"
+    }
 }
