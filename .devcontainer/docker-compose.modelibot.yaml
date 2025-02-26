@@ -49,4 +49,4 @@ services:
     pid: "host"
     user: $_ROS_USER
     tty: true
-    command: /bin/bash -l -c 'fastdds discovery -i ${_SERVER_ID:?_SERVER_ID must be set in .env file} --backup'
+    command: /bin/bash -l -c 'fastdds discovery -i ${_SERVER_ID:?_SERVER_ID must be set in .env file}'
