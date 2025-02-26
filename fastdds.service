@@ -1,0 +1,14 @@
+[Unit]
+Description=fastdds discovery server
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=theseus
+ExecStart=/usr/bin/fastdds discovery --server-id 0 --backup 
+
+[Install]
+WantedBy=multi-user.target
