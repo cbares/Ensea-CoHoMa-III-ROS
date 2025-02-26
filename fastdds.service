@@ -7,8 +7,9 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-User=theseus
+User=pi
+WorkingDirectory=/home/pi
 ExecStart=/usr/bin/fastdds discovery --server-id 0 --backup 
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target 
