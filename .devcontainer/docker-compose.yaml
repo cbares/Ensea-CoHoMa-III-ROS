@@ -8,16 +8,16 @@ services:
         source: ../modelidar
       dockerfile: .devcontainer/Dockerfile
       args:
-        USERNAME: $_ROS_USER
+        USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
     privileged: true
     environment:
       DISPLAY: $DISPLAY
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
-      ROS_DOMAIN_ID: "0"
+      ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
       #ROS_STATIC_PEERS: "10.0.4.101;10.0.4.114"
-      ROS_DISCOVERY_SERVER: "10.0.4.114:11811;10.0.4.101:11881"
+      ROS_DISCOVERY_SERVER: $_DISCOVERY_SERVER_LIST
       #FASTDDS_BUILTIN_TRANSPORTs: "LARGE_DATA"
-      #ROS_SUPER_CLIENT: true
+      ROS_SUPER_CLIENT: ${_ROS_SUPER_CLIENT:-false}
       RMW_IMPLEMENTATION: rmw_fastrtps_cpp
       #FASTRTPS_DEFAULT_PROFILES_FILE=/home/$_ROS_USER/fastdds_default_profiles.xml
     volumes:
@@ -26,12 +26,12 @@ services:
       - /dev/dri:/dev/dri:cached
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
       - /dev/input:/dev/input:bind
-      - /dev/ttyACM0:/dev/ttyACM0:bind
+      - /dev:/dev:bind
       - /run/user/1000:/run/user/1000
     network_mode: "host"
     ipc: "host"
     pid: "host"
-    user: theseus
+    user: $_ROS_USER
     tty: true
     deploy:
       resources:

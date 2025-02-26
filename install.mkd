@@ -1,4 +1,10 @@
-# Docker
+# Setup System
+
+## Real-time Kernel on Raspberry
+
+## Prepare Raspberry Image
+
+## Docker
 
 install docker:
 ```sh
@@ -9,7 +15,7 @@ $(. /etc/os-release && echo "$VERSION_CODENAME") stable" |   sudo tee /etc/apt/s
 sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 ```
 
-## startup
+## startup contianer
 
 ```console
 docker compose build
@@ -25,12 +31,15 @@ colcon build --symlink-install --packages-select <<package_name>>
 . install/setup.bash
 ```
 
-Create package:
-
+Create python package:
 ```sh
 ros2 pkg create --build-type ament_python --license Apache-2.0 modelidar --dependencies rclpy
 ```
 
+Create generic package:
+```sh
+ros2 pkg create --build-type ament_cmake --license Apache-2.0 modelidar --dependencies rclpy
+```
 
 Check URDF Model
 ```sh
@@ -108,8 +117,8 @@ sudo addgroup realtime
 sudo usermod -a -G realtime $(whoami)
 ```
 
-Add in `/etc/security/limits.conf`:
-```
+Add in `/etc/security/limits.conf.d/rtkernel.conf`:
+```sh
 @realtime soft rtprio 99
 @realtime soft priority 99
 @realtime soft memlock unlimited
@@ -118,9 +127,22 @@ Add in `/etc/security/limits.conf`:
 @realtime hard memlock unlimited
 ```
 
-
+```sh
 sudo adduser pi docker
 docker compose -f .devcontainer/docker-compose.modelibot.yaml build
 docker compose -f .devcontainer/docker-compose.modelibot.yaml up
 ```
 
+## Super Client
+Use Super Client for ROS2 daemon actions: 
+```sh
+ROS_SUPER_CLIENT=TRUE ros2 topic list
+ROS_SUPER_CLIENT=TRUE rviz2 -d src/modelidar/urdf/view_robot.rviz
+```
+Needed because ROS2 Daemon does'nt work like a standard node
+
+## start fastdds discovery server:
+```sh
+fastdds discovery --server-id 0 --backup 
+```
+(-i seams deprecated...)
