@@ -8,7 +8,12 @@ Panels:
         - /Status1
         - /RobotModel1
         - /RobotModel1/Description Topic1
-        - /RobotModel1/Links1
+        - /Odometry1
+        - /Odometry1/Status1
+        - /Odometry1/Shape1
+        - /Odometry1/Covariance1
+        - /Odometry1/Covariance1/Position1
+        - /Odometry1/Covariance1/Orientation1
       Splitter Ratio: 0.5
     Tree Height: 867
   - Class: rviz_common/Selection
@@ -136,6 +141,45 @@ Visualization Manager:
       Update Interval: 0
       Value: true
       Visual Enabled: true
+    - Angle Tolerance: 0.10000000149011612
+      Class: rviz_default_plugins/Odometry
+      Covariance:
+        Orientation:
+          Alpha: 0.5
+          Color: 255; 255; 127
+          Color Style: RGB
+          Frame: Local
+          Offset: 1
+          Scale: 1
+          Value: false
+        Position:
+          Alpha: 0.30000001192092896
+          Color: 204; 51; 204
+          Scale: 1
+          Value: true
+        Value: true
+      Enabled: true
+      Keep: 100
+      Name: Odometry
+      Position Tolerance: 0.10000000149011612
+      Shape:
+        Alpha: 0.699999988079071
+        Axes Length: 1
+        Axes Radius: 0.10000000149011612
+        Color: 255; 25; 0
+        Head Length: 0.019999999552965164
+        Head Radius: 0.009999999776482582
+        Shaft Length: 0.5
+        Shaft Radius: 0.009999999776482582
+        Value: Arrow
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        Filter size: 10
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /modelidar_base_controller/odom
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -182,7 +226,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 1.0066348314285278
+      Distance: 4.01544713973999
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
@@ -197,10 +241,10 @@ Visualization Manager:
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.28539833426475525
+      Pitch: 0.595397412776947
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 1.0203977823257446
+      Yaw: 2.5353851318359375
     Saved: ~
 Window Geometry:
   Displays:
@@ -218,5 +262,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 2357
-  X: 1306
-  Y: 305
+  X: 760
+  Y: 102

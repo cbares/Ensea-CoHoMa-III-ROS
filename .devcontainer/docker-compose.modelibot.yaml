@@ -11,11 +11,12 @@ services:
       args:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
     privileged: true
+    depends_on:
+      - fastdds_server
     environment:
-      DISPLAY: $DISPLAY
+      # DISPLAY: $DISPLAY
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
-      #ROS_STATIC_PEERS: "10.0.4.101;10.0.4.114"
       ROS_DISCOVERY_SERVER: $_DISCOVERY_SERVER_LIST
       #FASTDDS_BUILTIN_TRANSPORTs: "LARGE_DATA"
       ROS_SUPER_CLIENT: ${_ROS_SUPER_CLIENT:-false}
@@ -34,10 +35,18 @@ services:
     pid: "host"
     user: $_ROS_USER
     tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
+    command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"
+  
+  fastdds_server:
+    image: ros_modelibot
+    privileged: true
+    environment:
+      ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
+      ROS_DISCOVERY_SERVER: $_DISCOVERY_SERVER_LIST
+      RMW_IMPLEMENTATION: rmw_fastrtps_cpp
+    network_mode: "host"
+    ipc: "host"
+    pid: "host"
+    user: $_ROS_USER
+    tty: true
+    command: /bin/bash -l -c 'fastdds discovery -i ${_SERVER_ID:?_SERVER_ID must be set in .env file}'
