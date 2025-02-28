@@ -2,6 +2,7 @@ name: Modelibot
 
 services:
   ros_container:
+    image: ros_modelibot
     build:
       context: ../
       additional_contexts:

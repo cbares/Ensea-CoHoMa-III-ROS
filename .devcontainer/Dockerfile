@@ -4,14 +4,6 @@ ARG USERNAME=theseus
 ARG USER_UID=1000
 ARG USER_GID=$USER_UID
 
-# Create the user
-# RUN groupadd --gid $USER_GID $USERNAME \
-#     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
-#     && apt-get update \
-#     && apt-get install -y sudo \
-#     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
-#     && chmod 0440 /etc/sudoers.d/$USERNAME
-
 # Rename default user
 ARG OLD_USERNAME=ubuntu
 RUN usermod --login $USERNAME --move-home --home /home/$USERNAME $OLD_USERNAME\
@@ -57,18 +49,11 @@ RUN mkdir -p /home/${USERNAME}/ws/src
 WORKDIR /home/${USERNAME}/ws
 
 RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --ignore-src -y && sudo chown -R $(whoami) /home/${USERNAME}/ws/
-RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
-RUN grep -qF 'TAG2' $HOME/.profile || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.profile
-
 SHELL ["/bin/bash", "--login", "-c"] 
-
+RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
 RUN --mount=type=bind,source=modelidar,target=src/modelidar \
-    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build"  
-
-# [Optional] Set the default user. Omit if you want to keep the default as root.
-
-
-#ENTRYPOINT ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true 
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build" 
+RUN grep -qF 'TAG2' $HOME/.profile || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.profile
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash
