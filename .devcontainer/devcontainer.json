@@ -1,7 +1,7 @@
 {
     "name": "ROS 2 Development Container",
     "remoteUser": "theseus",
-    "dockerComposeFile": "docker-compose.yaml",
+    "dockerComposeFile": "docker-compose.usbcamera.yaml",
     "service": "ros_container",
     "workspaceFolder": "/home/theseus/ws",
     "customizations": {
@@ -9,8 +9,7 @@
             "extensions":[
                 "ms-vscode.cpptools-extension-pack",
                 "donjayamanne.python-extension-pack",
-                "eamodio.gitlens",
-                "ms-iot.vscode-ros"
+                "eamodio.gitlens"
             ],
             "settings": {
                 "C_Cpp.default.includePath": [

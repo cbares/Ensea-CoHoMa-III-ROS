@@ -1,0 +1,85 @@
+## Camera
+
+## instal transport
+
+```sh
+sudo apt install ros-jazzy-ffmpeg-image-transport
+sudo apt install ros-jazzy-theora-image-transport
+```
+
+- ffmpeg -> h264(default) hevc(h265)
+- thorea -> theora
+- zstd -> zlib
+- compressed -> jpeg/png
+
+pour ffmpeg:
+
+- libx265: décodage soft
+- hevc_nvenc: hardware sur nvidia
+- hevc_v4l2m2m: hardwarde sur raspberry
+- hevc_vaapi: hardware sur AMD
+
+## vl2_camera
+
+```sh
+sudo apt-get install ros-${ROS_DISTRO}-v4l2-camera ros-${ROS_DISTRO}-image-transport-plugins 
+ros2 run v4l2_camera v4l2_camera_node
+```
+
+pro:
+
+- compatible USB + picam
+- no node provided
+
+### Tests
+
+Topic | Hz | Bandwidth
+--- | --- | ---
+raw | 25 | 22 - 24 Mbit/s
+compressed | 30 | 3.2 Mbit/s
+**theora** | **~30** | **50-60 kbit/s**
+zstd | 18 | 10.5 Mbit/s
+ffmpeg (libx265) | 30 | 2 Mbit/s
+
+## ros_camera
+
+```sh
+sudo apt install ros-$ROS_DISTRO-camera-ros
+ros2 launch camera_ros camera.launch.py
+ros2 run camera_ros camera_node --ros-args -p camera:="0"
+```
+
+pro:
+
+- compatible USB + picam (based on v4l2)
+
+con:
+
+- Doesn't work with DELL integrated cam: not detected by libcamera
+
+## usb_cam
+```sh
+sudo apt-get install ros-<ros2-distro>-usb-cam
+```
+
+### Tests
+
+Topic | Hz | Bandwidth
+--- | --- | ---
+raw | 10 | 8 - 12 Mbit/s
+compressed | 29,7 | 1,9 Mbit/s
+**theora** | **29,7** | **30-34 kbit/s**
+zstd | 29,7 | 11-12 Mbit/s
+ffmpeg (H264) | 30 | 2,1 Mbit/s
+
+
+
+
+
+## General notes
+
+- choose transport:=theora
+- This also installs the package libcamera as dependency. This is the bloomed version of the official upstream repo at [https://git.libcamera.org/libcamera/libcamera.git] and may not contain full support for all Raspberry Pi camera modules. If you need full camera module support on Raspberry Pi, you have to build the "raspberrypi" fousb-camrk from [https://github.com/raspberrypi/libcamera] manually.
+- available format: 1280x720@10Hz, 640x480@30Hz, 1920x1080@5Hz (web cam DELL)
+- `ros2 run image_transport list_transports`
+- 

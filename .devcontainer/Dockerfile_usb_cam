@@ -1,0 +1,62 @@
+FROM ros:jazzy
+
+ARG USERNAME=theseus
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Rename default user
+ARG OLD_USERNAME=ubuntu
+RUN usermod --login $USERNAME --move-home --home /home/$USERNAME $OLD_USERNAME\
+    && groupmod --new-name $USERNAME $OLD_USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get install -y python3-pip
+ENV SHELL=/bin/bash
+
+# ********************************************************
+# * Anything else you want to do like clean up goes here *
+# ********************************************************
+
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-usb-cam \
+        ros-${ROS_DISTRO}-cv-bridge ros-${ROS_DISTRO}-image-transport \
+        ros-${ROS_DISTRO}-image-publisher ros-${ROS_DISTRO}-image-view
+
+# needed for usb_cam
+RUN apt-get update && apt-get install -y python3-pydantic
+
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-camera-ros ros-${ROS_DISTRO}-v4l2-camera
+
+# ROS2 visualization tools
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rviz2 ros-${ROS_DISTRO}-rqt*
+
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-ffmpeg-image-transport
+
+ENV RCUTILS_COLORIZED_OUTPUT=1
+USER ${USERNAME}
+RUN mkdir -p /home/${USERNAME}/ws/src
+
+WORKDIR /home/${USERNAME}/ws
+
+RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --ignore-src -y && sudo chown -R $(whoami) /home/${USERNAME}/ws/
+SHELL ["/bin/bash", "--login", "-c"] 
+RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
+RUN --mount=type=bind,source=local_usbcam,target=src/local_usbcam \
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --packages-select local_usbcam" 
+RUN grep -qF 'TAG2' $HOME/.profile || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.profile
+
+COPY --chmod=+x <<-"EOF" /entrypoint.sh
+#!/bin/bash
+source /opt/ros/${ROS_DISTRO}/setup.bash
+source ~/ws/install/setup.bash
+exec "$@"
+EOF
+
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+CMD ["tail", "-f", "/dev/null"]
+
+#CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
+
