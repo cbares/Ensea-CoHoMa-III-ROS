@@ -1,7 +1,7 @@
 name: Modelibot
 
 services:
-  ros_container:
+  cam_container:
     image: ros_modelibot
     build:
       context: ../
@@ -34,10 +34,3 @@ services:
     pid: "host"
     user: $_ROS_USER
     tty: true
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
