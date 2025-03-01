@@ -29,6 +29,8 @@ def generate_launch_description():
             arguments=['ffmpeg', 'raw'],
             parameters=[{
                 'ffmpeg_image_transport.map.libx265': 'hevc',
+                'ffmpeg_image_transport.map.hevc_v4l2m2m': 'hevc',
+                'ffmpeg_image_transport.map.hevc_nvenc': 'hevc',
                 'in_transport': 'ffmpeg',
                 'out_transport': 'raw',
                 'out.enable_pub_plugins': ['image_transport/raw'],

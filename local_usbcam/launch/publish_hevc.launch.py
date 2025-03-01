@@ -19,7 +19,7 @@ def generate_launch_description():
             name='video_usbcam',
             output='screen',
             parameters=[{
-                'ffmpeg_image_transport.encoding': 'hevc_v4l2m2m',
+                'ffmpeg_image_transport.encoding': 'hevc',
                 # 'ffmpeg_image_transport.encoding': 'hevc_nvec',
                 # 'ffmpeg_image_transport.encoding': 'libx265',
                 'ffmpeg_image_transport.profile': 'main',
