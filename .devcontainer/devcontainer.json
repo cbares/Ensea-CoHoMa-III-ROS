@@ -1,17 +1,16 @@
 {
     "name": "ROS 2 Development Container",
     "remoteUser": "theseus",
-    "dockerComposeFile": "docker-compose.yaml",
-    "service": "ros_container",
+    "dockerComposeFile": "docker-compose.gpsd-server.yaml",
+    "service": "gpsd_server_container",
     "workspaceFolder": "/home/theseus/ws",
     "customizations": {
         "vscode": {
             "extensions":[
                 "ms-vscode.cpptools-extension-pack",
                 "donjayamanne.python-extension-pack",
-                "eamodio.gitlens",
-                "ms-iot.vscode-ros"
-            ],
+                "eamodio.gitlens"
+                ],
             "settings": {
                 "C_Cpp.default.includePath": [
                     "/opt/ros/jazzy/include/**",
