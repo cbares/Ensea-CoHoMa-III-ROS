@@ -36,7 +36,12 @@ SHELL ["/bin/bash", "--login", "-c"]
 RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
 
 # FIXME: Setup gdpsd server
+# RUN sed -i -e "s/OPTION=.*$/OPTION=\"-s 115200 -f8N1\"/" /etc/default/gpsd \
+#     sed -i -e "s/DEVICES=.*$/DEVICES=\"\/dev\/gps\"/" /etc/default/gpsd \
+#     sed -i -e "s/GPSD_OPTIONS=.*$/GPSD_OPTIONS=\"-n -D 1\"/" /etc/default/gpsd \
+#     sed -i -e "s/USBAUTO=.*$/USBAUTO=\"false\"/" /etc/default/gpsd
 
+RUN gpsd -n -D 1 -f 8N1 -s 115200 /dev/gps
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash

@@ -1,0 +1,61 @@
+# Installation sur raspberry
+
+## paquets génériques:
+
+```sh
+apt update
+apt install git python3-serial vim
+adduser theseus dialout
+newgrp dialout
+```
+
+## installation de docker
+
+```sh
+#!/bin/bash
+
+# REF:https://docs.docker.com/engine/install/debian/#install-using-the-repository 
+
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get install ca-certificates curl gnupg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+docker run hello-world
+```
+
+## udev ports com
+
+```sh
+sudo tee /etc/udev/rules.d/99-usb-devices.rules > /dev/null <<EOF
+SUBSYSTEM=="tty", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="7523", SYMLINK+="gps"
+SUBSYSTEM=="tty", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", SYMLINK+="lora"
+EOF
+```
+
+```sh
+sudo udevadm control --reload
+sudo udevadm trigger
+```
+
+## git clone
+
+```sh
+git clone -b gps https://github.com/cbares/Ensea-CoHoMa-III-ROS.git gps
+
+cp gps/.devcontainer/env.example .env
+
+docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml build
+docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml up -d
+```
