@@ -1,0 +1,50 @@
+FROM ros:jazzy
+
+ARG USERNAME=theseus
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+# Rename default user
+ARG OLD_USERNAME=ubuntu
+RUN usermod --login $USERNAME --move-home --home /home/$USERNAME $OLD_USERNAME\
+    && groupmod --new-name $USERNAME $OLD_USERNAME \
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get update && apt-get install -y python3-pip
+ENV SHELL=/bin/bash
+
+# ********************************************************
+# * Anything else you want to do like clean up goes here *
+# ********************************************************
+
+
+RUN apt-get update && apt-get install -y gpsd gpsd-clients
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-gpsd-client
+
+
+ENV RCUTILS_COLORIZED_OUTPUT=1
+USER ${USERNAME}
+RUN mkdir -p /home/${USERNAME}/ws/src
+
+WORKDIR /home/${USERNAME}/ws
+SHELL ["/bin/bash", "--login", "-c"] 
+
+RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
+
+# FIXME: Setup gdpsd server
+
+
+COPY --chmod=+x <<-"EOF" /entrypoint.sh
+#!/bin/bash
+source /opt/ros/${ROS_DISTRO}/setup.bash
+exec "$@"
+EOF
+
+ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+CMD ["ros2", "launch", "gpsd_client", "gpsd_client-launch.py"]
+
+# ENTRYPOINT ["tail", "-f", "/dev/null"]
