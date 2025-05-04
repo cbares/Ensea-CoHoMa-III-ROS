@@ -1,6 +1,6 @@
 # Installation sur raspberry
 
-## rpimager:
+## rpimager
 
 - nom: perdrixX.local
 - user: theseus
@@ -8,8 +8,7 @@
 - ssid: RABBIT
 - key: theseus-2023
 
-
-## paquets génériques:
+## paquets génériques
 
 ```sh
 apt update
@@ -18,9 +17,9 @@ adduser theseus dialout
 newgrp dialout
 ```
 
-## config GPS:
+## config GPS
 
-``sh
+```sh
 pyserial-miniterm /dev/gps 115200
 ```
 
@@ -64,18 +63,41 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
+## activation du port serie
+
+```sh
+sudo tee -a /boot/firmware/config.txt > /dev/null <<EOF
+enable_uart=1
+dtoverlay=disable-bt
+EOF
+```
+
+enlever `console=serial0,115200` de `/boot/firmware/cmdline.txt`
+
+```sh
+sudo systemctl disable hciuart
+sudo systemctl stop hciuart
+```
+
+
+## config GPS
+
 ```sh
 pyserial-miniterm /dev/gps 115200
+pyserial-miniterm /dev/ttyAMA0 115200
 ```
+
 ```sh
+CONFIG COM2 9600
 MODE ROVER
-GPGGA 1
-GPRMC 1
-GPGSV 1
+GPGGA COM2 1
+GPRMC COM2 1
+GPGSV COM2 1
+GPGGA COM3 1
+GPRMC COM3 1
+GPGSV COM3 1
 SAVECONFIG
 ```
-
-
 
 ## git clone
 
