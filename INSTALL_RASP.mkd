@@ -1,5 +1,14 @@
 # Installation sur raspberry
 
+## rpimager:
+
+- nom: perdrixX.local
+- user: theseus
+- password: theseus-2023
+- ssid: RABBIT
+- key: theseus-2023
+
+
 ## paquets génériques:
 
 ```sh
@@ -7,6 +16,12 @@ apt update
 apt install git python3-serial vim
 adduser theseus dialout
 newgrp dialout
+```
+
+## config GPS:
+
+``sh
+pyserial-miniterm /dev/gps 115200
 ```
 
 ## installation de docker
@@ -48,6 +63,19 @@ EOF
 sudo udevadm control --reload
 sudo udevadm trigger
 ```
+
+```sh
+pyserial-miniterm /dev/gps 115200
+```
+```sh
+MODE ROVER
+GPGGA 1
+GPRMC 1
+GPGSV 1
+SAVECONFIG
+```
+
+
 
 ## git clone
 

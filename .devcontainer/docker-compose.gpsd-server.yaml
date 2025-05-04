@@ -34,5 +34,5 @@ services:
     pid: "host"
     user: $_ROS_USER
     tty: true
-
+    restart: unless-stopped
               
