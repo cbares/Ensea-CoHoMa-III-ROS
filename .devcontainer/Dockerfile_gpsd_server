@@ -46,7 +46,7 @@ exec "$@"
 EOF
 
 # File supervisord.conf
-COPY <<-"EOF" /etc/supervisor/conf.d/gpsd.conf
+COPY <<-"EOF" /etc/supervisor/conf.d/supervisord.conf
 [supervisord]
 nodaemon=true
 logfile=/dev/null
