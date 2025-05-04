@@ -62,6 +62,7 @@ source ~/ws/install/setup.bash
 exec "$@"
 EOF
 
+USER root
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
 
