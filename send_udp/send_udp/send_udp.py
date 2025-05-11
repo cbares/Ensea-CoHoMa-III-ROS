@@ -4,9 +4,10 @@ import json
 
 import rospy
 from sensor_msgs.msg import NavSatFix
-    NAME = "2_TER_PETIT-POUCET"
-    UDP_IP = "192.168.2.213" #debug
-    UDP_PORT = 32001
+
+NAME = "2_TER_PETIT-POUCET"
+UDP_IP = "192.168.2.213" #debug
+UDP_PORT = 32001
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
