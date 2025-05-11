@@ -35,9 +35,9 @@ WORKDIR /home/${USERNAME}/ws
 SHELL ["/bin/bash", "--login", "-c"] 
 
 
-COPY https://github.com/jenswilly/sbus_serial.git /home/${USERNAME}/ws/src/sbus_serial
+ADD https://github.com/jenswilly/sbus_serial.git /home/${USERNAME}/ws/src/sbus_serial
 
-RUN colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+RUN /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release"
 
 
 RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
@@ -58,5 +58,7 @@ EOF
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+CMD ["ros2", "launch", "send_udp", "sbus_serial.launch.py"]
 
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
