@@ -41,7 +41,7 @@ services:
     build:
       context: ../
       additional_contexts:
-        source: ../modelidar
+        source: ../send_udp
       dockerfile: .devcontainer/Dockerfile_sbus_pwm
       args:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}

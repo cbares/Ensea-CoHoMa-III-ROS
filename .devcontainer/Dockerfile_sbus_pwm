@@ -64,6 +64,6 @@ EOF
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
 #CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
-CMD ["ros2", "launch", "send_udp", "sbus_serial.launch.py"]
+CMD ["ros2", "launch", "send_udp", "gps_sbus_launch.py"]
 
 # ENTRYPOINT ["tail", "-f", "/dev/null"]
