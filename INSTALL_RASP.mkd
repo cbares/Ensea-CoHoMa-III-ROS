@@ -152,5 +152,5 @@ sudo apt install meshtasticd
 ```
 
 ```sh
-meshtastic --port /dev/lora --set position.rx_gpio 48 --set position.tx_gpio 47 --set position.gps_mode 1 --set position.broadcast_smart_minimum_interval_secs 1 --set position.broadcast_smart_minimum_distance 5 --set position.position_broadcast_smart_enabled true --set position.position_broadcast_secs 1
+meshtastic --port /dev/lora --set position.rx_gpio 48 --set position.tx_gpio 47 --set position.gps_mode 1 --set position.broadcast_smart_minimum_interval_secs 1 --set position.broadcast_smart_minimum_distance 5 --set position.position_broadcast_smart_enabled true --set position.position_broadcast_secs 1 --ch-set module_settings.position_precision 32 --ch-index 0
 ```
