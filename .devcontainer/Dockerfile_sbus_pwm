@@ -22,13 +22,10 @@ ENV SHELL=/bin/bash
 # ********************************************************
 
 
-RUN apt-get update && apt-get install -y gpsd gpsd-clients
-RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-gpsd-client
+RUN apt-get update && apt-get install -y libboost-dev
 
 RUN apt-get update && sudo apt-get install -y supervisor
 RUN mkdir -p /var/log/supervisor
-
-RUN apt-get update && apt-get install -y rtklib
 
 ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}
@@ -37,7 +34,14 @@ RUN mkdir -p /home/${USERNAME}/ws/src
 WORKDIR /home/${USERNAME}/ws
 SHELL ["/bin/bash", "--login", "-c"] 
 
+
+COPY https://github.com/jenswilly/sbus_serial.git /home/${USERNAME}/ws/src/sbus_serial
+
+RUN colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+
 RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
+
 
 # File entrypoint.sh
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
@@ -48,11 +52,11 @@ exec "$@"
 EOF
 
 # File supervisord.conf
-COPY supervisor-gpsd.conf /etc/supervisor/conf.d/supervisord.conf
+#COPY supervisor-gpsd.conf /etc/supervisor/conf.d/supervisord.conf
 
 
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 # ENTRYPOINT ["tail", "-f", "/dev/null"]

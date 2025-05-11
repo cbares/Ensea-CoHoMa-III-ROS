@@ -1,14 +1,19 @@
-# Installation sur raspberry
+# Installation des box perdrix (GPS+LORA+PWM)
 
-## rpimager
+## Installation de base sur raspberry
+
+### rpimager
+
+Image raspbian bookworm 64bit lite
 
 - nom: perdrixX.local
 - user: theseus
 - password: theseus-2023
 - ssid: RABBIT
 - key: theseus-2023
+- ssh activé
 
-## paquets génériques
+### paquets génériques
 
 ```sh
 apt update
@@ -17,18 +22,12 @@ adduser theseus dialout
 newgrp dialout
 ```
 
-## config GPS
+### installation de docker
 
-```sh
-pyserial-miniterm /dev/gps 115200
-```
-
-## installation de docker
+REF: https://docs.docker.com/engine/install/debian/install-using-the-repository 
 
 ```sh
 #!/bin/bash
-
-# REF:https://docs.docker.com/engine/install/debian/#install-using-the-repository 
 
 # Add Docker's official GPG key:
 sudo apt-get update
@@ -42,14 +41,35 @@ echo \
   "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian \
   "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
   sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-sudo apt-get update
 
+# Install packages
+sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 docker run hello-world
 ```
 
-## udev ports com
+### activation du port serie sur Raspberry
+
+```sh
+sudo tee -a /boot/firmware/config.txt > /dev/null <<EOF
+enable_uart=1
+dtoverlay=uart0
+dtoverlay=uart5
+dtoverlay=disable-bt
+EOF
+```
+
+enlever `console=serial0,115200` de `/boot/firmware/cmdline.txt`
+
+```sh
+sudo systemctl disable hciuart
+sudo systemctl stop hciuart
+```
+
+### udev ports com
+
+Valable pour les GPS WTRTK-982 et les LORA Heltec 32
 
 ```sh
 sudo tee /etc/udev/rules.d/99-usb-devices.rules > /dev/null <<EOF
@@ -63,30 +83,16 @@ sudo udevadm control --reload
 sudo udevadm trigger
 ```
 
-## activation du port serie
-
-```sh
-sudo tee -a /boot/firmware/config.txt > /dev/null <<EOF
-enable_uart=1
-dtoverlay=disable-bt
-EOF
-```
-
-enlever `console=serial0,115200` de `/boot/firmware/cmdline.txt`
-
-```sh
-sudo systemctl disable hciuart
-sudo systemctl stop hciuart
-```
-
-
 ## config GPS
+
+### parametrage du WTRTK-982
 
 ```sh
 pyserial-miniterm /dev/gps 115200
 pyserial-miniterm /dev/ttyAMA0 115200
 ```
 
+Config à envoyer au WTRTK-982 via le port ttyAMA0 de préférence
 ```sh
 CONFIG COM2 9600
 MODE ROVER
@@ -96,10 +102,11 @@ GPGSV COM2 1
 GPGGA COM3 1
 GPRMC COM3 1
 GPGSV COM3 1
+GPGSA COM3 1
 SAVECONFIG
 ```
 
-## git clone
+### git clone du repo gps
 
 ```sh
 git clone -b gps https://github.com/cbares/Ensea-CoHoMa-III-ROS.git gps
@@ -109,3 +116,30 @@ cp gps/.devcontainer/env.example .env
 docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml build
 docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml up -d
 ```
+
+### GPS RTK sur raspberry:
+```sh
+sudo apt install rtklib
+```
+
+```sh
+str2str -in ntrip://crtk.net:2101/OUIL -out serial://ttyAMA0:115200:8:n:1
+str2str -in ntrip://10.0.4.114:2101/ENSEA -out serial://ttyAMA0:115200:8:n:1
+str2str -in tcpcli://10.0.4.114:2947#rtcm3 -out serial://ttyAMA0:115200:8:n:1
+```
+
+#### NTRIP Caster sur Server
+
+La dernière version est nécessaire pour pouvoir caster en ntrip.
+
+```sh
+git clone git@github.com:rtklibexplorer/RTKLIB.git
+cd RTKLIB && mkdir build && cd build
+cmake ..
+make str2str
+cd ../bin
+
+str2str -in ntrip://crtk.net:2101/OUIL -out ntripc://0.0.0.0:2101/ENSEA
+```
+
+## install meshstatic CLI
