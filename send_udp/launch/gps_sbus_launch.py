@@ -30,8 +30,8 @@ def generate_launch_description():
     
     sbus_cmd_vel_node = Node(
             package='sbus_serial',
-            executable='sbus_serial_node',
-            name='sbus_serial_node',
+            executable='sbus_cmd_vel_node',
+            name='sbus_cmd_vel_node',
             parameters=[{
             }]
         )
