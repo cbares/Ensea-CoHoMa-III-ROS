@@ -143,3 +143,14 @@ str2str -in ntrip://crtk.net:2101/OUIL -out ntripc://0.0.0.0:2101/ENSEA
 ```
 
 ## install meshstatic CLI
+
+```sh
+echo 'deb http://download.opensuse.org/repositories/network:/Meshtastic:/beta/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/network:Meshtastic:beta.list
+curl -fsSL https://download.opensuse.org/repositories/network:Meshtastic:beta/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/network_Meshtastic_beta.gpg > /dev/null
+sudo apt update
+sudo apt install meshtasticd
+```
+
+```sh
+meshtastic --port /dev/lora --set position.rx_gpio 48 --set position.tx_gpio 47 --set position.gps_mode 1 --set position.broadcast_smart_minimum_interval_secs 1 --set position.broadcast_smart_minimum_distance 5 --set position.position_broadcast_smart_enabled true --set position.position_broadcast_secs 1
+```

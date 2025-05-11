@@ -48,6 +48,7 @@ COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
+source /home/${USERNAME}/ws/install/setup.bash
 exec "$@"
 EOF
 
