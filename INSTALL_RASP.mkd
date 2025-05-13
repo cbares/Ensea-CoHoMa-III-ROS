@@ -16,9 +16,9 @@ Image raspbian bookworm 64bit lite
 ### paquets génériques
 
 ```sh
-apt update
-apt install git python3-serial vim
-adduser theseus dialout
+sudo apt update
+sudo apt install git python3-serial vim
+sudo adduser theseus dialout
 newgrp dialout
 ```
 
@@ -45,6 +45,9 @@ echo \
 # Install packages
 sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+sudo adduser theseus docker
+newgrp docker
 
 docker run hello-world
 ```
@@ -106,6 +109,13 @@ GPGSA COM3 1
 SAVECONFIG
 ```
 
+Référence:
+
+* COM1: port usb mappé en /dev/gps sur le Raspberry
+* COM2: connecté au lora
+* COM3: mappé en Série sur /dev/ttyAMA0
+
+
 ### git clone du repo gps
 
 ```sh
@@ -113,7 +123,7 @@ git clone -b gps https://github.com/cbares/Ensea-CoHoMa-III-ROS.git gps
 
 cp gps/.devcontainer/env.example .env
 
-docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml build
+COMPOSE_BAKE=true docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml build
 docker compose -f gps/.devcontainer/docker-compose.gpsd-server.yaml up -d
 ```
 
@@ -145,12 +155,19 @@ str2str -in ntrip://crtk.net:2101/OUIL -out ntripc://0.0.0.0:2101/ENSEA
 ## install meshstatic CLI
 
 ```sh
-echo 'deb http://download.opensuse.org/repositories/network:/Meshtastic:/beta/Raspbian_12/ /' | sudo tee /etc/apt/sources.list.d/network:Meshtastic:beta.list
-curl -fsSL https://download.opensuse.org/repositories/network:Meshtastic:beta/Raspbian_12/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/network_Meshtastic_beta.gpg > /dev/null
-sudo apt update
-sudo apt install meshtasticd
+sudo apt install pipx && pipx install "meshtastic[cli]"
+pipx ensurepath
+sudo reboot
 ```
 
 ```sh
 meshtastic --port /dev/lora --set position.rx_gpio 48 --set position.tx_gpio 47 --set position.gps_mode 1 --set position.broadcast_smart_minimum_interval_secs 1 --set position.broadcast_smart_minimum_distance 5 --set position.position_broadcast_smart_enabled true --set position.position_broadcast_secs 1 --ch-set module_settings.position_precision 32 --ch-index 0
+```
+
+## config réseau
+
+nmtui
+
+```
+sudo nmcli c add type ethernet name "Ethernet static ip" ipv4.addresses 192.168.2.21/24 ipv4.method manual ipv4.gateway 192.168.2.1 ipv4.dns 192.168.2.1
 ```
