@@ -30,6 +30,9 @@ RUN mkdir -p /var/log/supervisor
 
 RUN apt-get update && apt-get install -y rtklib
 
+RUN apt-get update && apt-get install -y libboost-dev
+
+
 ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}
 RUN mkdir -p /home/${USERNAME}/ws/src
@@ -39,7 +42,7 @@ SHELL ["/bin/bash", "--login", "-c"]
 
 ADD https://github.com/jenswilly/sbus_serial.git /home/${USERNAME}/ws/src/sbus_serial
 
-RUN /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select sbus_serial"
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select sbus_serial
 
 RUN --mount=type=bind,source=send_udp,target=src/send_udp \
     /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select send_udp"
