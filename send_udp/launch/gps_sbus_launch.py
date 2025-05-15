@@ -33,6 +33,7 @@ def generate_launch_description():
         executable='sbus_cmd_vel_node',
         name='sbus_cmd_vel_node',
         parameters=[{
+            'useStamped': False,
         }]
     )
 
