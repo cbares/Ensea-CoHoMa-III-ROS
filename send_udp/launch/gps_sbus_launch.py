@@ -32,6 +32,7 @@ def generate_launch_description():
         package='sbus_serial',
         executable='sbus_cmd_vel_node',
         name='sbus_cmd_vel_node',
+        remappings=[('/output/sbus/cmd_vel','/bicycle_steering_controller/reference')],
         parameters=[{
             'useStamped': False,
         }]
