@@ -23,6 +23,8 @@ def setup_data_udp(data):
     dt["uav longitude"] = data.longitude
     dt["uav latitude"] = data.latitude
     dt["uav altitude"] = data.altitude
+    dt["uav altitude"] = 0
+    dt["uav height"] = 0 
     dt["uav speed"] = 0
     dt["uav heading"] = 0
     jdata = json.dumps(dt)
@@ -34,7 +36,7 @@ def setup_data_rest(data):
     dt["name"] = NAME
     dt["longitude"] = data.longitude
     dt["latitude"] = data.latitude
-    #dt["altitude"] = data.altitude
+    dt["altitude"] = 0
     #dt["speed"] = 0
     #dt[" heading"] = 0
     jdata = json.dumps(dt)
