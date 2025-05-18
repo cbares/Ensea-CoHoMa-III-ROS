@@ -59,7 +59,6 @@ source $HOME/ws/install/setup.bash
 exec "$@"
 EOF
 
-RUN apt-get install -y python-pip && pip install supervisor-stdout
 
 RUN sed -i 's/DEVICES=""/DEVICES="\/dev\/gps"/g' /etc/default/gpsd
 RUN sed -i 's/USBAUTO="true"/USBAUTO="false"/g' /etc/default/gpsd
