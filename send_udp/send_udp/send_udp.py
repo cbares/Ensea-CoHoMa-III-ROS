@@ -2,7 +2,8 @@
 import os
 import socket
 import json
-import requests
+
+#import requests
 
 import rospy
 from sensor_msgs.msg import NavSatFix
@@ -31,17 +32,17 @@ def setup_data_udp(data):
     
     return jdata
 
-def setup_data_rest(data):
-    dt = {}
-    dt["name"] = NAME
-    dt["longitude"] = data.longitude
-    dt["latitude"] = data.latitude
-    dt["altitude"] = 0
-    #dt["speed"] = 0
-    #dt[" heading"] = 0
-    jdata = json.dumps(dt)
+# def setup_data_rest(data):
+#     dt = {}
+#     dt["name"] = NAME
+#     dt["longitude"] = data.longitude
+#     dt["latitude"] = data.latitude
+#     dt["altitude"] = 0
+#     #dt["speed"] = 0
+#     #dt[" heading"] = 0
+#     jdata = json.dumps(dt)
     
-    return jdata
+#     return jdata
 
 def callback_udp(data):
     #rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
@@ -53,11 +54,11 @@ def callback_udp(data):
 
     rospy.loginfo(Message)
 
-def callback_rest_api(data):
-    jdata = setup_data_rest(data)
-    Message = bytes(jdata)
+# def callback_rest_api(data):
+#     jdata = setup_data_rest(data)
+#     Message = bytes(jdata)
 
-    requests.post(f"http://{IHM_IP}:{IHM_PORT}/api/satellite/update", json=Message)
+#     requests.post(f"http://{IHM_IP}:{IHM_PORT}/api/satellite/update", json=Message)
 
 def listener():
 
