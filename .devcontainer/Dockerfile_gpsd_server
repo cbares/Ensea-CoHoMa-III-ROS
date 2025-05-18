@@ -59,6 +59,8 @@ source $HOME/ws/install/setup.bash
 exec "$@"
 EOF
 
+RUN apt-get install -y python-pip && pip install supervisor-stdout
+
 RUN sed -i 's/true/false/g' /etc/default/gpsd
 
 # File supervisord.conf
