@@ -148,7 +148,7 @@ cd RTKLIB && mkdir build && cd build
 cmake ..
 make str2str
 cd ../bin
-
+  
 str2str -in ntrip://crtk.net:2101/OUIL -out ntripc://0.0.0.0:2101/ENSEA
 ```
 
