@@ -5,7 +5,8 @@ import json
 
 #import requests
 
-import rospy
+import rclpy
+from rclpy.node import Node
 from sensor_msgs.msg import NavSatFix
 
 
@@ -45,14 +46,13 @@ def setup_data_udp(data):
 #     return jdata
 
 def callback_udp(data):
-    #rospy.loginfo(rospy.get_caller_id() + "I heard %s", data.data)
-    print(data)
+
     jdata = setup_data_udp(data)
     Message = bytes(jdata)
 
     sock.sendto(Message, (UDP_IP, UDP_PORT))
 
-    rospy.loginfo(Message)
+    rclpy.logging.get_logger('send_udp').info(Message)
 
 # def callback_rest_api(data):
 #     jdata = setup_data_rest(data)
@@ -60,23 +60,41 @@ def callback_udp(data):
 
 #     requests.post(f"http://{IHM_IP}:{IHM_PORT}/api/satellite/update", json=Message)
 
-def listener():
 
-    # In ROS, nodes are uniquely named. If two nodes with the same
-    # name are launched, the previous one is kicked off. The
-    # anonymous=True flag means that rospy will choose a unique
-    # name for our 'listener' node so that multiple listeners can
-    # run simultaneously.
-    rospy.init_node('listener', anonymous=True)
 
-    rospy.Subscriber("/fix", NavSatFix, callback_udp)
 
-    while not rospy.core.is_shutdown():
-        rospy.rostime.wallsleep(0.5)
+class MySubscriber(Node):
+    def __init__(self):
+        super().__init__('my_subscriber')
+        self.subscription = self.create_subscription(
+            NavSatFix,
+            'fix',
+            self.listener_callback,
+            10)
+        self.subscription  # prevent unused variable warning
 
-    # spin() simply keeps python from exiting until this node is stopped
-    rospy.spin()
+    def listener_callback(self, msg):
+        jdata = setup_data_udp(msg.data)
+        Message = bytes(jdata)
+        print(Message)
+        sock.sendto(Message, (UDP_IP, UDP_PORT))
+
+        self.get_logger().info(Message)
+
+
+def main(args=None):
+    rclpy.init(args=args)
+
+    my_subscriber = MySubscriber()
+
+    rclpy.spin(my_subscriber)
+
+    # Destroy the node explicitly
+    # (optional - otherwise it will be done automatically
+    # when the garbage collector destroys the node object)
+    my_subscriber.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == '__main__':
-    listener()
+    main()
 
