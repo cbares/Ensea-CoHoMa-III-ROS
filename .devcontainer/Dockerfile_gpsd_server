@@ -61,7 +61,10 @@ EOF
 
 RUN apt-get install -y python-pip && pip install supervisor-stdout
 
-RUN sed -i 's/true/false/g' /etc/default/gpsd
+RUN sed -i 's/DEVICES=""/DEVICES="\/dev\/gps"/g' /etc/default/gpsd
+RUN sed -i 's/USBAUTO="true"/USBAUTO="false"/g' /etc/default/gpsd
+RUN sed -i 's/GPSD_OPTIONS=""/GPSD_OPTIONS="-n -D 1 -f 8N1 -s 115200/g' /etc/default/gpsd
+RUN sed -i 's/START_DAEMON="false"/START_DAEMON="true"/g' /etc/default/gpsd
 
 # File supervisord.conf
 COPY supervisor-gpsd.conf /etc/supervisor/conf.d/supervisord.conf
