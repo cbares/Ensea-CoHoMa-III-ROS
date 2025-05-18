@@ -22,7 +22,7 @@ ENV SHELL=/bin/bash
 # ********************************************************
 
 
-RUN apt-get update && apt-get install -y gpsd gpsd-clients
+RUN apt-get update && apt-get install -y gpsd-clients
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-gpsd-client
 
 RUN apt-get update && sudo apt-get install -y supervisor
@@ -59,11 +59,6 @@ source $HOME/ws/install/setup.bash
 exec "$@"
 EOF
 
-
-RUN sed -i 's/DEVICES=""/DEVICES="\/dev\/gps"/g' /etc/default/gpsd
-RUN sed -i 's/USBAUTO="true"/USBAUTO="false"/g' /etc/default/gpsd
-RUN sed -i 's/GPSD_OPTIONS=""/GPSD_OPTIONS="-n -D 1 -f 8N1 -s 115200/g' /etc/default/gpsd
-RUN sed -i 's/START_DAEMON="false"/START_DAEMON="true"/g' /etc/default/gpsd
 
 # File supervisord.conf
 COPY supervisor-gpsd.conf /etc/supervisor/conf.d/supervisord.conf
