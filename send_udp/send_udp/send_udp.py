@@ -74,7 +74,7 @@ class MySubscriber(Node):
         self.subscription  # prevent unused variable warning
 
     def listener_callback(self, msg):
-        jdata = setup_data_udp(msg.data)
+        jdata = setup_data_udp(msg)
         Message = bytes(jdata)
         print(Message)
         sock.sendto(Message, (UDP_IP, UDP_PORT))
