@@ -74,7 +74,7 @@ class MySubscriber(Node):
 
     def listener_callback(self, msg):
         jdata = setup_data_udp(msg)
-        Message = bytes(jdata)
+        Message = bytes(jdata.encode('utf-8'))
         print(Message)
         sock.sendto(Message, (UDP_IP, UDP_PORT))
 
