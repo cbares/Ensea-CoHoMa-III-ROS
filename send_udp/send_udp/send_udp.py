@@ -48,8 +48,7 @@ def setup_data_udp(data):
 def callback_udp(data):
 
     jdata = setup_data_udp(data)
-    Message = bytes(jdata)
-
+    Message = bytes(jdata.encode('utf-8')) 
     sock.sendto(Message, (UDP_IP, UDP_PORT))
 
     rclpy.logging.get_logger('send_udp').info(Message)
