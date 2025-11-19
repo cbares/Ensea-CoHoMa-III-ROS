@@ -1,3 +1,4 @@
 **/.env
 *.pdf
 fastdds_profile.xml
+*.pyc

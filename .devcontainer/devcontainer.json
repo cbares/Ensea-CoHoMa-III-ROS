@@ -1,8 +1,10 @@
 {
     "name": "ROS 2 Development Container",
     "remoteUser": "theseus",
-    "dockerComposeFile": "docker-compose.gpsd-server.yaml",
-    "service": "gpsd_server_container",
+    // "dockerComposeFile": "docker-compose.gpsd-server.yaml",
+    // "service": "gpsd_server_container",
+    "dockerComposeFile": "docker-compose.modelibot.yaml",
+    "service": "modelibot_container",
     "workspaceFolder": "/home/theseus/ws",
     "customizations": {
         "vscode": {

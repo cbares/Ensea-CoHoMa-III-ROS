@@ -1,7 +1,7 @@
 name: Modelibot
 
 services:
-  ros_container:
+  modelibot_container:
     image: ros_modelibot
     build:
       context: ../

@@ -42,7 +42,7 @@ RUN /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --syml
 RUN --mount=type=bind,source=send_udp,target=src/send_udp \
     /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select send_udp"
 
-²
+
 RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
 RUN grep -qF 'TAG2' $HOME/.profile || echo 'source $HOME/ws/install/setup.bash # TAG2' >> $HOME/.profile
 
