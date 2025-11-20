@@ -12,7 +12,8 @@ services:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
     privileged: true
     environment:
-      DISPLAY: $DISPLAY
+      DISPLAY: ${DISPLAY:-:0}
+      WAYLAND_DISPLAY: ${WAYLAND_DISPLAY:-wayland-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_STATIC_PEERS: $_ROS_STATIC_PEERS
       ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
@@ -21,9 +22,14 @@ services:
       ROS_SUPER_CLIENT: ${_ROS_SUPER_CLIENT:-false}
       RMW_IMPLEMENTATION: rmw_fastrtps_cpp
       #FASTRTPS_DEFAULT_PROFILES_FILE=/home/$_ROS_USER/fastdds_default_profiles.xml
+      $XDG_RUNTIME_DIR: /run/user/1000
+    env_file:
+      - .env
     volumes:
       - ../:/home/$_ROS_USER/ws/src:cached
       - /tmp/.X11-unix:/tmp/.X11-unix:cached
+      - /tmp/.wayland-unix:/tmp/.wayland-unix:cached
+      - $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY:/tmp/$WAYLAND_DISPLAY:cached
       - /dev/dri:/dev/dri:cached
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
       - /dev/input:/dev/input:bind

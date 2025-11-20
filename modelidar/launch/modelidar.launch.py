@@ -18,6 +18,7 @@ from launch.conditions import IfCondition
 from launch.event_handlers import OnProcessExit
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
 
+from launch_ros.descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -74,7 +75,7 @@ def generate_launch_description():
             prefix,
         ]
     )
-    robot_description = {"robot_description": robot_description_content}
+    robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
 
     robot_controllers = PathJoinSubstitution(
         [FindPackageShare(package_name), "config", controller_file]
@@ -92,6 +93,7 @@ def generate_launch_description():
         parameters=[{'robot_description': robot_description},
                     robot_controllers],
         output="both",
+        #arguments=['--ros-args', '--log-level', 'debug']
     )
     # Robot State Publisher from URDF
     robot_state_pub_node = Node(
@@ -99,6 +101,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
+        #arguments=['--ros-args', '--log-level', 'debug']
     )
     # RViz
     rviz_node = Node(
@@ -107,6 +110,7 @@ def generate_launch_description():
         name="rviz2",
         output="log",
         arguments=["-d", rviz_config_file],
+        # arguments=["-d", rviz_config_file, '--ros-args', '--log-level', 'debug'],
         condition=IfCondition(gui),
     )
 
@@ -114,6 +118,7 @@ def generate_launch_description():
         package="controller_manager",
         executable="spawner",
         arguments=["joint_state_broadcaster"],
+        # arguments=["joint_state_broadcaster", '--ros-args', '--log-level', 'debug'],
     )
 
     robot_controller_spawner = Node(
@@ -125,6 +130,7 @@ def generate_launch_description():
             robot_controllers,
             "--controller-ros-args",
             f"-r /{package_name}_base_controller/cmd_vel:=/cmd_vel", # remap to /cmd_vel
+  #          '--ros-args', '--log-level', 'debug'
         ],
     )
 

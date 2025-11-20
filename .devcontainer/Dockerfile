@@ -37,6 +37,10 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-navigation2 \
 # rosdep request to install dependencies:
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-ros2-controllers-test-nodes liburdfdom-tools
 
+# dependencies for LSlidar
+RUN apt-get update && apt-get install -y libpcl-dev ros-${ROS_DISTRO}-pcl-ros ros-${ROS_DISTRO}-diagnostic-updater 
+RUN apt-get update && apt-get install -y libflann-dev libpcap-dev
+
 
 # Change the size of rviz window (hpi screen)
 RUN sed -i -e "s/1200/4000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
@@ -63,7 +67,7 @@ exec "$@"
 EOF
 
 USER root
-ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
 CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
 
 

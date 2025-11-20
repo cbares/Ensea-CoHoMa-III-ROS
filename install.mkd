@@ -164,7 +164,7 @@ fastdds discovery --server-id 0 --backup
 
 or better, in a systemd service:
 
-```sh
+```ini
 [Unit]
 Description=fastdds discovery server
 After=network.target
@@ -183,3 +183,20 @@ WantedBy=multi-user.target
 ```
 
 and `sudo cp fastdds.service /etc/systemd/system`
+
+
+## Instal LSLIDAR
+
+```sh
+source ../.profile
+colcon build --packages-skip udp_sender --symlink-install
+colcon build --packages-skip udp_sender --symlink-install
+source ./install/setup.bash
+export DISPLAY=:0
+ros2 launch lslidar_driver lslidar_launch.py
+```
+
+Init Lslidar?
+``` sh
+ros2 topic pub --once /lslidar_order std_msgs/msg/Int8 "{data: 1}"
+```

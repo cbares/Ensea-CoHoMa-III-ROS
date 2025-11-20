@@ -1,8 +1,6 @@
 {
     "name": "ROS 2 Development Container",
     "remoteUser": "theseus",
-    // "dockerComposeFile": "docker-compose.gpsd-server.yaml",
-    // "service": "gpsd_server_container",
     "dockerComposeFile": "docker-compose.modelibot.yaml",
     "service": "modelibot_container",
     "workspaceFolder": "/home/theseus/ws",
@@ -17,8 +15,12 @@
                 "C_Cpp.default.includePath": [
                     "/opt/ros/jazzy/include/**",
                     "/home/theseus/ws/src/modelidar/include/**",
+                    "/home/theseus/ws/src/Lslidar_ROS2_driver/lslidar_driver/include/**",
+                    "/home/theseus/ws/install/lslidar_msgs/include/lslidar_msgs/**",
                     "/usr/include/**"
-                ]
+                ],
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "terminal.integrated.shellArgs.linux": ["-l"]
             }
         }
     }

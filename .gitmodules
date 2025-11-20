@@ -1,0 +1,4 @@
+[submodule "Lslidar_ROS2_driver"]
+	path = Lslidar_ROS2_driver
+	url = git@github.com:theseus-cohoma/Lslidar_ROS2_driver.git
+    branch = M10P/N10P

@@ -2,3 +2,6 @@
 *.pdf
 fastdds_profile.xml
 *.pyc
+build/
+install/
+log/

@@ -111,7 +111,8 @@
 	<joint name="$(arg prefix)lidar_joint" type="fixed">
 		<parent link="$(arg prefix)mounting_plate"/>
 		<child link="$(arg prefix)lidar"/>
-		<origin xyz="0.060 0.0 0" rpy="0 0 ${-110*PI/180}"/>
+		<!-- Hauteur du laser: 30.5 + 10 = 40.5 -->
+		<origin xyz="0.06664 0.0 0.0405" rpy="0 0 ${-180*PI/180}"/>
 	</joint>
 
 	<xacro:macro name="wheel" params="prefix pos side xyz rpy">   
