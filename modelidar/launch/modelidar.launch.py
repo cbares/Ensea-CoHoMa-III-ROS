@@ -27,7 +27,7 @@ package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
 rviz_default_file_name = 'view_robot.rviz'
 controller_file = 'modelidar_controllers.yaml'
-prefix = ""
+
 
 def generate_launch_description():
     # Declare arguments
@@ -37,6 +37,14 @@ def generate_launch_description():
             "gui",
             default_value="true",
             description="Start RViz2 automatically with this launch file.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "prefix",
+            default_value="",
+            description="Prefix for joint names, useful for multi-robot setup. If changed than also "
+            "joint names in the controller configuration file must be updated accordingly.",
         )
     )
     declared_arguments.append(
@@ -58,6 +66,7 @@ def generate_launch_description():
     gui = LaunchConfiguration("gui")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     use_sim_time = LaunchConfiguration('use_sim_time')
+    prefix = LaunchConfiguration("prefix")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -90,8 +99,7 @@ def generate_launch_description():
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[{'robot_description': robot_description},
-                    robot_controllers],
+        parameters=[robot_controllers],
         output="both",
         #arguments=['--ros-args', '--log-level', 'debug']
     )
@@ -100,7 +108,7 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description],
+        parameters=[robot_description, ],
         #arguments=['--ros-args', '--log-level', 'debug']
     )
     # RViz

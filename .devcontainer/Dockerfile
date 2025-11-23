@@ -41,6 +41,10 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-ros2-controllers-test
 RUN apt-get update && apt-get install -y libpcl-dev ros-${ROS_DISTRO}-pcl-ros ros-${ROS_DISTRO}-diagnostic-updater 
 RUN apt-get update && apt-get install -y libflann-dev libpcap-dev
 
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
+
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-slam-toolbox ros-${ROS_DISTRO}-nav2-route
+
 
 # Change the size of rviz window (hpi screen)
 RUN sed -i -e "s/1200/4000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
@@ -56,13 +60,15 @@ RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --igno
 SHELL ["/bin/bash", "--login", "-c"] 
 RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
 RUN --mount=type=bind,source=modelidar,target=src/modelidar \
-    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build" 
+    --mount=type=bind,source=Lslidar_ROS2_driver,target=src/Lslidar_ROS2_driver \
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install" 
 RUN grep -qF 'TAG2' $HOME/.profile || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.profile
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
-#!/bin/bash
+#!/bin/bash -l
 source /opt/ros/${ROS_DISTRO}/setup.bash
 source ~/ws/install/setup.bash
+export DISPLAY=:0
 exec "$@"
 EOF
 

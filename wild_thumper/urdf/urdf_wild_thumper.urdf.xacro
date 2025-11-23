@@ -76,7 +76,7 @@
 		</visual>
 	</link>
 
-	<link name="lidar">
+	<link name="laser">
 		<visual>
 			<geometry>
 				<!--<cylinder radius="0.05207" length="0.0716"/>-->
@@ -124,9 +124,9 @@
 		<origin xyz="0.115 0.00 -0.012" rpy="0 0 0"/>
 	</joint>
 	
-	<joint name="lidar_joint" type="fixed">
+	<joint name="laser_joint" type="fixed">
 		<parent link="mounting_plate"/>
-		<child link="lidar"/>
+		<child link="laser"/>
 		<origin xyz="0.060 0.0 0" rpy="0 0 ${-110*PI/180}"/>
 	</joint>
 
@@ -247,7 +247,7 @@
 	<xacro:range_sensor name="sonar_forward_right" ros_topic="range_forward_right" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
 	<xacro:range_sensor name="sonar_backward" ros_topic="range_backward" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
 
-	<gazebo reference="lidar">
+	<gazebo reference="laser">
 		<sensor type="ray" name="head_rplidar_a2_sensor">
 			<pose>0 0 0 0 0 0</pose>
 			<visualize>false</visualize>
@@ -274,7 +274,7 @@
 			</ray>
 			<plugin name="gazebo_ros_head_rplidar_a2_controller" filename="libgazebo_ros_laser.so">
 				<topicName>/scan</topicName>
-				<frameName>lidar</frameName>
+				<frameName>laser</frameName>
 			</plugin>
 		</sensor>
 	</gazebo>

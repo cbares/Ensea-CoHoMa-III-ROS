@@ -14,7 +14,7 @@
             "settings": {
                 "C_Cpp.default.includePath": [
                     "/opt/ros/jazzy/include/**",
-                    "/home/theseus/ws/src/modelidar/include/**",
+                    "/home/theseus/ws/install/modelidar/include/modelidar/**",
                     "/home/theseus/ws/src/Lslidar_ROS2_driver/lslidar_driver/include/**",
                     "/home/theseus/ws/install/lslidar_msgs/include/lslidar_msgs/**",
                     "/usr/include/**"

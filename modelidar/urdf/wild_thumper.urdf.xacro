@@ -60,7 +60,7 @@
 		</visual>
 	</link>
 
-	<link name="$(arg prefix)lidar">
+	<link name="$(arg prefix)laser">
 		<visual>
 			<geometry>
 				<!--<cylinder radius="0.05207" length="0.0716"/>-->
@@ -108,11 +108,11 @@
 		<origin xyz="0.115 0.00 -0.012" rpy="0 0 0"/>
 	</joint>
 	
-	<joint name="$(arg prefix)lidar_joint" type="fixed">
+	<joint name="$(arg prefix)laser_joint" type="fixed">
 		<parent link="$(arg prefix)mounting_plate"/>
-		<child link="$(arg prefix)lidar"/>
+		<child link="$(arg prefix)laser"/>
 		<!-- Hauteur du laser: 30.5 + 10 = 40.5 -->
-		<origin xyz="0.06664 0.0 0.0405" rpy="0 0 ${-180*PI/180}"/>
+		<origin xyz="0.06664 0.0 0.0405" rpy="0 0 ${-0*PI/180}"/>
 	</joint>
 
 	<xacro:macro name="wheel" params="prefix pos side xyz rpy">   
@@ -253,7 +253,7 @@
 	<xacro:range_sensor name="$(arg prefix)sonar_forward_right" ros_topic="$(arg prefix)range_forward_right" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
 	<xacro:range_sensor name="$(arg prefix)sonar_backward" ros_topic="$(arg prefix)range_backward" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
 
-	<gazebo reference="$(arg prefix)lidar">
+	<gazebo reference="$(arg prefix)laser">
 		<sensor type="ray" name="$(arg prefix)head_rplidar_a2_sensor">
 			<pose>0 0 0 0 0 0</pose>
 			<visualize>false</visualize>
@@ -280,7 +280,7 @@
 			</ray>
 			<plugin name="gazebo_ros_head_rplidar_a2_controller" filename="libgazebo_ros_laser.so">
 				<topicName>/scan</topicName>
-				<frameName>lidar</frameName>
+				<frameName>laser</frameName>
 			</plugin>
 		</sensor>
 	</gazebo>

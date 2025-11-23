@@ -189,8 +189,7 @@ and `sudo cp fastdds.service /etc/systemd/system`
 
 ```sh
 source ../.profile
-colcon build --packages-skip udp_sender --symlink-install
-colcon build --packages-skip udp_sender --symlink-install
+colcon build --symlink-install
 source ./install/setup.bash
 export DISPLAY=:0
 ros2 launch lslidar_driver lslidar_launch.py
@@ -199,4 +198,16 @@ ros2 launch lslidar_driver lslidar_launch.py
 Init Lslidar?
 ``` sh
 ros2 topic pub --once /lslidar_order std_msgs/msg/Int8 "{data: 1}"
+```
+
+
+NAV2
+```
+ros2 launch nav2_bringup navigation_launch.py
+ros2 launch slam_toolbox online_sync_launch.py
+ros2 run rviz2 rviz2 -d /opt/ros/jazzy/share/nav2_bringup/rviz/nav2_default_view.rviz
+```
+
+```log
+[ERROR] [1763677900.242640975] [rviz2]: Lookup would require extrapolation into the future.  Requested time 1763677900.244203 but the latest data is at time 1763677900.242026, when looking up transform from frame [lidar] to frame [map]
 ```
