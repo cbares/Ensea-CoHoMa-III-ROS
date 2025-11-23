@@ -148,27 +148,20 @@ hardware_interface::return_type ModelidarSystemHardware::read(
   double posL, posR, velL, velR;
   std::string resp = comms_.get_state_values(posL, posR, velL, velR);
 
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  std::stringstream ss;
-  ss << "Reading states:";
-  ss << std::fixed << std::setprecision(2);
+  set_state(left_wheel_.position_name, posL);
+  set_state(right_wheel_.position_name, posR);
+  set_state(left_wheel_.velocity_name, velL);
+  set_state(right_wheel_.velocity_name, velR);
 
-  try{
-    set_state(left_wheel_.position_name, posL);
-    set_state(right_wheel_.position_name, posR);
-    set_state(left_wheel_.velocity_name, velL);
-    set_state(right_wheel_.velocity_name, velR);
-  } catch (std::out_of_range &) {
-    ss << std::endl << "State interface not found during read :" << left_wheel_.position_name << " or " << right_wheel_.velocity_name;
+  if(rcutils_logging_logger_is_enabled_for(get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG)){
+    std::stringstream ss;
+    ss << "Reading states:";
+    ss << std::fixed << std::setprecision(2);
+    ss << std::endl << "Left wheel - Position: " << posL << " Velocity: " << velL;
+    ss << std::endl << "Right wheel - Position: " << posR << " Velocity: " << velR;
+    ss << std::endl << "Response: " << resp;
+    RCLCPP_DEBUG_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
   }
-  
-  ss << std::endl << "Left wheel - Position: " << posL << " Velocity: " << velL;
-  ss << std::endl << "Right wheel - Position: " << posR << " Velocity: " << velR;
-
-  ss << std::endl << "Response: " << resp;
-
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 500, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
 
   return hardware_interface::return_type::OK;
 }
@@ -178,24 +171,19 @@ hardware_interface::return_type ModelidarSystemHardware::write(
 {
   // call to set_motor_values(left, right);
 
-  // BEGIN: This part here is for exemplary purposes - Please do not copy to your production code
-  std::stringstream ss;
   double left = 0.0;
   double right = 0.0;
 
-  ss << "Writing commands:";
-  try{
-    left = get_command(left_wheel_.velocity_name);
-    right = get_command(right_wheel_.velocity_name);
-  } catch (std::out_of_range &) {
-       ss << std::endl << "Command interface not found during write"; 
-  }
-
+  left = get_command(left_wheel_.velocity_name);
+  right = get_command(right_wheel_.velocity_name);
   std::string response = comms_.set_motor_speed(left, right);
-  ss << std::endl << "Response: " << response;
 
-  RCLCPP_INFO_THROTTLE(get_logger(), *get_clock(), 1000, "%s", ss.str().c_str());
-  // END: This part here is for exemplary purposes - Please do not copy to your production code
+  if(rcutils_logging_logger_is_enabled_for(get_logger().get_name(), RCUTILS_LOG_SEVERITY_DEBUG)){
+    std::stringstream ss;
+    ss << "Writing commands:";
+    ss << std::endl << "Response: " << response;
+    RCLCPP_DEBUG_THROTTLE(get_logger(), *get_clock(), 1000, "%s", ss.str().c_str());
+  }
 
   return hardware_interface::return_type::OK;
 }
