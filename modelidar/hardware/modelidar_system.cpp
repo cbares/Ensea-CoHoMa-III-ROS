@@ -32,11 +32,15 @@
 namespace modelidar
 {
 
+
+//hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
+//  const hardware_interface::HardwareInfo & info)
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
-  const hardware_interface::HardwareInfo & info)
+    const hardware_interface::HardwareComponentInterfaceParams & params)
 {
+  auto info_ = params.hardware_info;
   if (
-    hardware_interface::SystemInterface::on_init(info) !=
+    hardware_interface::SystemInterface::on_init(params) !=
     hardware_interface::CallbackReturn::SUCCESS)
   {
     return hardware_interface::CallbackReturn::ERROR;
