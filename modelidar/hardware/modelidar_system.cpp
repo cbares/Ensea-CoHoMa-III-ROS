@@ -32,7 +32,6 @@
 namespace modelidar
 {
 
-
 hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params)
 {
