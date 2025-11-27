@@ -30,7 +30,7 @@ services:
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
       - /dev/input:/dev/input:bind
       - /dev:/dev:bind
-      - /run/user/1000:/run/user/1000
+      - /run/user/${UID:-1000}:/run/user/${UID:-1000}
     network_mode: "host"
     ipc: "host"
     pid: "host"
