@@ -18,9 +18,7 @@
                     "/home/theseus/ws/src/Lslidar_ROS2_driver/lslidar_driver/include/**",
                     "/home/theseus/ws/install/lslidar_msgs/include/lslidar_msgs/**",
                     "/usr/include/**"
-                ],
-                "terminal.integrated.shell.linux": "/bin/bash",
-                "terminal.integrated.shellArgs.linux": ["-l"]
+                ]
             }
         }
     }

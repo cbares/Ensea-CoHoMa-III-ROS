@@ -185,7 +185,7 @@ WantedBy=multi-user.target
 and `sudo cp fastdds.service /etc/systemd/system`
 
 
-## Instal LSLIDAR
+## Install LSLIDAR
 
 ```sh
 source ../.profile

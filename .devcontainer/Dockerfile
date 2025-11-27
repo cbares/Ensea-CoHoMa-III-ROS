@@ -45,24 +45,23 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
 
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-slam-toolbox ros-${ROS_DISTRO}-nav2-route
 
-
-# Change the size of rviz window (hpi screen)
-RUN sed -i -e "s/1200/4000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
-RUN sed -i -e "s/800/2000/" /opt/ros/${ROS_DISTRO}/share/urdf_tutorial/rviz/urdf.rviz
-
 ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}
 RUN mkdir -p /home/${USERNAME}/ws/src
 
 WORKDIR /home/${USERNAME}/ws
 
+# Add user to video group to allow access to webcams and dialout for serial devices
+RUN sudo usermod --append --groups video,dialout $USERNAME
+
 RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --ignore-src -y && sudo chown -R $(whoami) /home/${USERNAME}/ws/
-SHELL ["/bin/bash", "--login", "-c"] 
-RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
+# SHELL ["/bin/bash", "--login", "-c"] 
+RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.bashrc
+RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
+
 RUN --mount=type=bind,source=modelidar,target=src/modelidar \
     --mount=type=bind,source=Lslidar_ROS2_driver,target=src/Lslidar_ROS2_driver \
     /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install" 
-RUN grep -qF 'TAG2' $HOME/.profile || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.profile
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash -l
@@ -71,10 +70,10 @@ source ~/ws/install/setup.bash
 export DISPLAY=:0
 exec "$@"
 EOF
+# COPY -chmod work only with in octal value in some Dockerfile
+RUN sudo chmod +x /entrypoint.sh 
 
-USER root
 ENTRYPOINT ["/entrypoint.sh"]
-CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
-
-
-# ENTRYPOINT ["tail", "-f", "/dev/null"]
+CMD [ "ros2", "launch", "modelidar", "view_robot.launch.py"]
+# CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
+# CMD ["tail", "-f", "/dev/null"]

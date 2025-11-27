@@ -17,55 +17,55 @@ from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
 from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
 
+from launch_ros.descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
-rviz_default_file_name = 'wild_thumper.rviz'
+rviz_default_file_name = "view_robot.rviz"
 
 
 def generate_launch_description():
     # Declare arguments
-    declared_arguments = []
-    declared_arguments.append(
+    declared_arguments = [
         DeclareLaunchArgument(
             "description_package",
             default_value="modelidar",
-            description="Description package with robot URDF/xacro files. Usually the argument \
-        is not set, it enables use of a custom description.",
-        )
-    )
-    declared_arguments.append(
+            description="Description package with robot URDF/xacro files. Usually the argument " \
+        "is not set, it enables use of a custom description.",
+        ),
         DeclareLaunchArgument(
             "description_file",
-            default_value="wild_thumper.urdf.xacro",
+            default_value=urdf_default_file_name,
             description="URDF/XACRO description file with the robot.",
-        )
-    )
-    declared_arguments.append(
+        ),
         DeclareLaunchArgument(
             "gui",
             default_value="true",
-            description="Start Rviz2 and Joint State Publisher gui automatically \
-        with this launch file.",
-        )
-    )
-    declared_arguments.append(
+            description="Start Rviz2 and Joint State Publisher gui automatically " \
+        "with this launch file.",
+        ),
         DeclareLaunchArgument(
             "prefix",
             default_value='""',
-            description="Prefix of the joint names, useful for \
-        multi-robot setup. If changed than also joint names in the controllers' configuration \
-        have to be updated.",
-        )
-    )
+            description="Prefix of the joint names, useful for " \
+        "multi-robot setup. If changed than also joint names in the controllers' configuration " \
+        "have to be updated.",
+        ),
+        DeclareLaunchArgument(
+            "rviz_default_file",
+            default_value=rviz_default_file_name,
+            description="Default RViz config file.",
+        ),
+    ]
 
     # Initialize Arguments
     description_package = LaunchConfiguration("description_package")
     description_file = LaunchConfiguration("description_file")
     gui = LaunchConfiguration("gui")
     prefix = LaunchConfiguration("prefix")
+    rviz_default_file = LaunchConfiguration("rviz_default_file")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -84,10 +84,10 @@ def generate_launch_description():
 
         ]
     )
-    robot_description = {"robot_description": robot_description_content}
+    robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}
 
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare(description_package), "urdf", "view_robot.rviz"]
+        [FindPackageShare(description_package), "urdf", rviz_default_file]
     )
 
     # Nodes
@@ -110,7 +110,7 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="log",
-        arguments=["-d", rviz_config_file],
+        arguments=["-d", rviz_config_file, "-f", "base_footprint"],
         condition=IfCondition(gui),
     )
 

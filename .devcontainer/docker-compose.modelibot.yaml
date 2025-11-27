@@ -12,7 +12,8 @@ services:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
     privileged: true
     environment:
-      # DISPLAY: $DISPLAY
+      DISPLAY: ${DISPLAY:-:0}
+      XDG_RUNTIME_DIR: /run/user/${UID:-1000}
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_STATIC_PEERS: $_ROS_STATIC_PEERS
       ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
@@ -35,4 +36,4 @@ services:
     pid: "host"
     user: $_ROS_USER
     tty: true
-    command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"
+    #command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"
