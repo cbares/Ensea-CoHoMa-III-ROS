@@ -1,43 +1,60 @@
-#ifndef MODELIDAR_WHEEL_HPP
-#define MODELIDAR_WHEEL_HPP
-
+#ifndef MODELIDAR__WHEEL_HPP_
+#define MODELIDAR__WHEEL_HPP_
 
 #include <cmath>
 #include <string>
 
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 
-namespace modelidar {
+namespace modelidar
+{
 
-class Wheel {
+/// One wheel: interface names and encoder ticks → radians conversion.
+class Wheel
+{
 public:
-    
-    std::string name;
-    int enc;
-    double cmd;
-    double pos;
-    double vel;
-    int rad_per_count;
+  std::string name;
+  std::string velocity_name;
+  std::string position_name;
 
-    std::string velocity_name;
-    std::string position_name;
-    
-    Wheel() = default;
+  void setup(const std::string & joint_name, int enc_counts_per_rev)
+  {
+    name = joint_name;
+    rad_per_count_ = 2.0 * M_PI / enc_counts_per_rev;
+    velocity_name = name + "/" + hardware_interface::HW_IF_VELOCITY;
+    position_name = name + "/" + hardware_interface::HW_IF_POSITION;
+  }
 
-    void setup(std::string name, int enc_counts_per_rev) {
-        this->name = name;
-        this->rad_per_count = 2 * M_PI / enc_counts_per_rev; 
-        this->velocity_name = name + "/" + hardware_interface::HW_IF_VELOCITY;
-        this->position_name = name + "/" + hardware_interface::HW_IF_POSITION;
-    };
+  /// Makes the current firmware position the origin (on activation).
+  void zero(long ticks)
+  {
+    offset_ = -ticks;
+    last_ticks_ = ticks;
+  }
 
-    double calc_enc_angle() {
-        return enc * rad_per_count;
-    };
+  /// The firmware restarted and counts from 0 again: keep the position continuous.
+  void firmware_restarted()
+  {
+    offset_ += last_ticks_;
+    last_ticks_ = 0;
+  }
 
+  /// Angle (rad) from the firmware position (ticks).
+  double position(long ticks)
+  {
+    last_ticks_ = ticks;
+    return static_cast<double>(ticks + offset_) * rad_per_count_;
+  }
+
+  /// Angular velocity (rad/s) from the firmware velocity (ticks/s).
+  double velocity(double ticks_per_s) const {return ticks_per_s * rad_per_count_;}
+
+private:
+  double rad_per_count_ = 0.0;
+  long offset_ = 0;
+  long last_ticks_ = 0;
 };
 
+}  // namespace modelidar
 
-} // namespace modelidar
-
-#endif // MODELIDAR_WHEEL_HPP
+#endif  // MODELIDAR__WHEEL_HPP_

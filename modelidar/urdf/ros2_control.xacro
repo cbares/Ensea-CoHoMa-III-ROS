@@ -13,11 +13,17 @@
           <plugin>modelidar/ModelidarSystemHardware</plugin>
           <param name="left_wheel_joint">virtual_left_wheel_joint</param> <!-- this value is also in controllers yaml file -->
           <param name="right_wheel_joint">virtual_right_wheel_joint</param> <!-- this value is also in controllers yaml file -->
-          <param name="loop_rate">30</param>
           <param name="device">/dev/ttyACM0</param>
           <param name="baud_rate">115200</param>
-          <param name="timeout">1000</param>
+          <param name="timeout">50</param> <!-- ms, per answer of the board (an answer takes ~5 ms) -->
           <param name="enc_counts_per_rev">544</param> <!-- 16x34 for encoder DAGU RS003-Enco -->
+          <!-- Velocity loop gains, sent to the board at activation (all four, or none to keep
+               the firmware defaults). See firmware/README.md, "Régulation de vitesse".
+          <param name="kp">0.05</param>
+          <param name="ki">0.5</param>
+          <param name="kff">0.05</param>
+          <param name="dmin">0.2</param>
+          -->
         </hardware>
       </xacro:unless>
       <xacro:if value="${use_mock_hardware}">

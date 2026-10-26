@@ -1,240 +1,196 @@
-#ifndef MODELIBOT_COMMS_HPP_
-#define MODELIBOT_COMMS_HPP_
+#ifndef MODELIDAR__MODELIDAR_COMMS_HPP_
+#define MODELIDAR__MODELIDAR_COMMS_HPP_
 
 /**
- * @file modelibot_comms.hpp
- * @brief Header file for communication module for mdoelibot
+ * @file modelidar_comms.hpp
+ * @brief Serial link to the modelidar firmware (firmware/README.md, "Protocole série").
+ *
+ * Commands (each one answered by a state line):
+ *   ?               query the state
+ *   V<l>,<r>        regulated wheel velocity, in mrad/s
+ *   /               stop, wheels free
+ *   *               brake
+ *   K<kp>,<ki>,<kff>,<dmin>   set the velocity loop gains (answered by "K:..." then the state)
+ *
+ * State line:  !0700,0600 L:+600,+420 R:+42.857,+210 C:USB F:-
+ *   - duty cycle applied (0..1000, 500 = stopped)
+ *   - per wheel: velocity (encoder ticks/s, may have decimals), position (ticks)
+ *   - C: who drives (USB, RC, LOST)
+ *   - F: active fault (-, USB_TIMEOUT, STALL)
+ *
+ * At boot the firmware also sends "MCU started (reset: ...)": the positions restart at 0.
  */
 
-#define HAVE_STDINT_H 1
-
-#include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <iterator>
-#include <regex>
-#include <string>
-#include <iostream>
+#include <algorithm>
 #include <cmath>
+#include <cstdio>
+#include <iostream>
+#include <sstream>
+#include <string>
 
+#ifndef HAVE_STDINT_H
+#define HAVE_STDINT_H 1  // serial.h: use <stdint.h>
+#endif
 #include <serial.h>
 
+namespace modelidar
+{
 
-// Comm examples:
-// Send a command: #0600,0700
-// Ask for state: ?
-// State return: !0500,0500 L:+0,+0 R:+0,+0
+/// Wheel velocity command limit accepted by the firmware (rad/s).
+constexpr double MAX_WHEEL_SPEED = 50.0;
 
-constexpr auto& CMD_PATTERN = "#%04d,%04d\r";
-constexpr auto& QUERY = "?\r";
-constexpr auto& STATE_PATTERN = "!%04d,%04d L:%+d,%+d R:%+d,%+d\r";
-constexpr auto& STATE_REGEX = "!(\\d{4}),(\\d{4}) L:([+-]?\\d+),([+-]?\\d+) R:([+-]?\\d+),([+-]?\\d+)";
-constexpr auto& ENCODER_REGEX = "!\\d{4},\\d{4} L:[+-]?\\d+,([+-]?\\d+) R:[+-]?\\d+,([+-]?\\d+)";
+struct WheelReading
+{
+  double velocity = 0.0;  ///< encoder ticks per second
+  long position = 0;      ///< encoder ticks since the firmware started
+};
 
-const double STEPS = 1000; // PWM steps
-// Motor specs
-const double Kv = 295 / 6 * 2 * M_PI / 60; // DAGU WT341 Motor: 295 RPM@6V
-const double Vo = 7.0; // Operating voltage (min)
-const double Wmax = Kv * Vo; // Max angular velocity
-const int counts_per_rev = 544; // Encoder counts per revolution
-const double VEL_PERIOD = 0.1; // Velocity control frequency, in seconds
+struct BoardState
+{
+  int duty_left = 500;
+  int duty_right = 500;
+  WheelReading left;
+  WheelReading right;
+  std::string owner;  ///< USB, RC or LOST
+  std::string fault;  ///< -, USB_TIMEOUT or STALL
+};
 
+/// Parses a state line ("!AAAA,BBBB L:v,p R:v,p C:x F:y"). Returns false if it is not one.
+inline bool parse_state(const std::string & line, BoardState & out)
+{
+  BoardState s;
+  char owner[16] = {0};
+  char fault[32] = {0};
+  int end = -1;
+  const int n = std::sscanf(
+    line.c_str(), "!%d,%d L:%lf,%ld R:%lf,%ld C:%15s F:%31s %n",
+    &s.duty_left, &s.duty_right,
+    &s.left.velocity, &s.left.position,
+    &s.right.velocity, &s.right.position,
+    owner, fault, &end);
+  if (n != 8 || end < 0 || static_cast<size_t>(end) != line.size()) {
+    return false;
+  }
+  s.owner = owner;
+  s.fault = fault;
+  out = s;
+  return true;
+}
+
+/// Velocity command frame, in mrad/s, clamped to the firmware limit.
+inline std::string velocity_frame(double left_rad_s, double right_rad_s)
+{
+  auto to_mrad = [](double v) {
+      if (!std::isfinite(v)) {
+        v = 0.0;
+      }
+      return std::lround(std::clamp(v, -MAX_WHEEL_SPEED, MAX_WHEEL_SPEED) * 1000.0);
+    };
+  std::ostringstream ss;
+  ss << "V" << to_mrad(left_rad_s) << "," << to_mrad(right_rad_s) << "\r";
+  return ss.str();
+}
 
 /**
- * @class ModelibotComms
- * @brief Class for STM32 communication
+ * @class ModelidarComms
+ * @brief Serial link to the STM32 board. Serial errors are thrown as exceptions.
  */
-class ModelibotComms
+class ModelidarComms
 {
-private:
-    serial::Serial serial_conn_;
-    serial::Timeout timeout_ms_;
-    bool print_output_;
-
 public:
+  ModelidarComms() = default;
 
-  /**
-   * @brief Default constructor
-   */
-  ModelibotComms(): serial_conn_(), timeout_ms_(){
-    print_output_ = false;
-  }
-
-  /**
-   * @brief Constructor
-   * @param serial_device The serial device to connect to
-   * @param baud_rate The baud rate to use for the connection
-   * @param timeout_ms The timeout value in milliseconds
-   */
-  ModelibotComms(const std::string &serial_device, int32_t baud_rate, int32_t timeout_ms): serial_conn_(), timeout_ms_(){
-    print_output_ = false;
-    connect(serial_device, baud_rate, timeout_ms);
-  }
-
-  /**
-   * @brief Connects to the serial device
-   * @param serial_device The serial device to connect to
-   * @param baud_rate The baud rate to use for the connection
-   * @param timeout_ms The timeout value in milliseconds
-   */
-  void connect(const std::string &serial_device, int32_t baud_rate, int32_t timeout_ms)
-  {  
-    serial_conn_.setPort(serial_device);
+  void connect(const std::string & device, uint32_t baud_rate, uint32_t timeout_ms)
+  {
+    disconnect();  // opening an open port throws
+    serial_conn_.setPort(device);
     serial_conn_.setBaudrate(baud_rate);
     auto t = serial::Timeout::simpleTimeout(timeout_ms);
     serial_conn_.setTimeout(t);
-
-    try{
-        serial_conn_.open();
-    }
-    catch (const serial::IOException&){
-        std::cout << "Error! Could not open device \"" << serial_device << "\"!)"  << std::endl;
-        throw std::runtime_error("Could not open device");
-    }
+    serial_conn_.open();
+    serial_conn_.flushInput();
   }
 
-  /**
-   * @brief Disconnects from the serial device
-   */
-  void disconnect()
+  /// Closes the link. Never throws: used on error and shutdown paths.
+  void disconnect() noexcept
   {
-    serial_conn_.flush();
-    serial_conn_.close();
-  }
-
-  /**
-   * @brief Checks if connected to the serial device
-   * @return True if connected, false otherwise
-   */
-  bool connected() const
-  {
-    return serial_conn_.isOpen();
-  }
-
-  void set_print_output()
-  {
-    print_output_ = true;
-  }
-
-  void reset_print_output()
-  {
-    print_output_ = false;
-  }
-
-  /**
-   * @brief Sends a message to the serial device and receives the response
-   * @param msg_to_send The message to send
-   * @return The response from the serial device
-   */
-  std::string send_msg(const std::string &msg_to_send)
-  {
-  
-    serial_conn_.flush(); // Just in case
-    serial_conn_.write(msg_to_send);
-
-    // TODO: throw exception instead of printing error message
-    std::string response;
-    // Responses end with \r\n so we will read up to (and including) the \n.
-    response = serial_conn_.readline();
-    
-
-    if (print_output_)
-    {
-      std::cout << "Sent: " << msg_to_send << " Recv: " << response << std::endl;
-    }
-
-    return response;
-  }
-
-
-  void read_state(int &val_L, int &val_R)
-  {
-    std::string response = send_msg(QUERY);
-
-    // State return:      !0500,0500 L:+0,+0 R:+0,+0
-    // Encoder positions:                 ^^      ^^
-
-    std::regex encoder_regex(ENCODER_REGEX);
-    std::smatch matches;
-    if(std::regex_search(response, matches, encoder_regex)){
-      // matches[0] is the whole string, matches[1] is the first group, etc.
-      val_L = std::stoi(matches[1]);
-      val_R = std::stoi(matches[2]);
-      return;
+    try {
+      if (serial_conn_.isOpen()) {
+        serial_conn_.close();
+      }
+    } catch (...) {
+      // device already gone (unplugged): nothing left to close
     }
   }
 
-  void read_full_state(int &pos_L, int &pos_R, int &vel_L, int &vel_R)
+  bool connected() const {return serial_conn_.isOpen();}
+
+  void set_print_output(bool on) {print_output_ = on;}
+
+  bool query(BoardState & state) {return exchange("?\r", state);}
+
+  /// Regulated wheel velocities, in rad/s.
+  bool set_velocity(double left_rad_s, double right_rad_s, BoardState & state)
   {
-    std::string response = send_msg(QUERY);
+    return exchange(velocity_frame(left_rad_s, right_rad_s), state);
+  }
 
-    // State return:      !0500,0500 L:+0,+0 R:+0,+0
-    // Groups:              -1-  -2-   -3--4-  -5--6-
-    // Command positions:  ^^^^ ^^^^
-    // Speed positions:                ^^      ^^
-    // Encoder positions:                 ^^      ^^
+  /// Stops the motors, wheels free. Also clears a STALL fault.
+  bool stop(BoardState & state) {return exchange("/\r", state);}
 
-    std::regex state_regex(STATE_REGEX);
-    std::smatch matches;
-    if(std::regex_search(response, matches, state_regex)){
-      // matches[0] is the whole string, matches[1] is the first group, etc.
-      pos_L = std::stoi(matches[4]);
-      pos_R = std::stoi(matches[6]);
-      vel_L = std::stoi(matches[3]);
-      vel_R = std::stoi(matches[5]);
-      return;
+  bool brake(BoardState & state) {return exchange("*\r", state);}
+
+  /// Velocity loop gains (see firmware/README.md, "Régulation de vitesse"). Lost at reboot.
+  bool set_gains(double kp, double ki, double kff, double dmin, BoardState & state)
+  {
+    std::ostringstream ss;
+    ss << "K" << kp << "," << ki << "," << kff << "," << dmin << "\r";
+    return exchange(ss.str(), state);
+  }
+
+  /// True once after the firmware restarted (its positions went back to 0).
+  bool take_reset()
+  {
+    const bool r = reset_seen_;
+    reset_seen_ = false;
+    return r;
+  }
+
+private:
+  /// Sends a command and waits for its state line, skipping the other lines
+  /// (boot message, "K:" answer). False on timeout or garbled answer.
+  bool exchange(const std::string & msg, BoardState & state)
+  {
+    serial_conn_.flushInput();  // drop stale lines, so answers stay in step
+    serial_conn_.write(msg);
+
+    for (int i = 0; i < 4; ++i) {
+      std::string line = serial_conn_.readline(256, "\n");
+      if (print_output_) {
+        std::cout << "Sent: " << msg << " Recv: " << line << std::endl;
+      }
+      if (line.empty()) {
+        return false;  // timeout
+      }
+      while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+        line.pop_back();
+      }
+      if (line.rfind("MCU started", 0) == 0) {
+        reset_seen_ = true;
+        continue;
+      }
+      if (line.rfind("!", 0) == 0) {
+        return parse_state(line, state);
+      }
     }
+    return false;
   }
 
-  std::string get_state_values(double &pos_L, double &pos_R, double &vel_L, double &vel_R)
-  {
-    int pos_L_enc, pos_R_enc, vel_L_enc, vel_R_enc;
-    read_full_state(pos_L_enc, pos_R_enc, vel_L_enc, vel_R_enc);
-
-    pos_L = ((double)pos_L_enc) / counts_per_rev * 2 * M_PI;
-    pos_R = ((double)pos_R_enc) / counts_per_rev * 2 * M_PI;
-    vel_L = ((double)vel_L_enc) / counts_per_rev * 2 * M_PI / VEL_PERIOD;
-    vel_R = ((double)vel_R_enc) / counts_per_rev * 2 * M_PI / VEL_PERIOD;
-
-    std::stringstream ss;
-    ss << "L: " << pos_L_enc << " " << vel_L_enc << " R: " << pos_R_enc << " " << vel_R_enc;
-    return ss.str();
-  }
-
-  std::string set_motor_values(int val_L, int val_R)
-  {
-    std::stringstream ss;
-    ss << "#" 
-      << std::setfill('0') << std::setw(4)
-      << val_L << "," 
-      << std::setfill('0') << std::setw(4)
-      << val_R << "\r";
-    send_msg(ss.str());
-    return (ss.str());
-  }
-
-  std::string set_motor_speed(double speed_L, double speed_R)
-  {
-    // speed in rad/s, need to be convert to PWM duty cycle beteween 0 and STEPS
-    // speed / Wmax => [-1, +1]
-    // speed / Wmax * STEPS/2 + STEPS/2 => [0, STEPS]
-    int pwm_L = (speed_L / Wmax) * STEPS/2 + STEPS/2;
-    int pwm_R = (speed_R / Wmax) * STEPS/2 + STEPS/2;
-    if (pwm_L > STEPS) pwm_L = STEPS;
-    if (pwm_L < 0) pwm_L = 0;
-    if (pwm_R > STEPS) pwm_R = STEPS;
-    if (pwm_R < 0) pwm_R = 0;
-
-    return set_motor_values(pwm_L, pwm_R);;
-  }
-
-  void set_pid_values(int k_p, int k_d, int k_i, int k_o)
-  {
-    std::stringstream ss;
-    ss << "u " << k_p << ":" << k_d << ":" << k_i << ":" << k_o << "\r";
-    send_msg(ss.str());
-  }
-
+  serial::Serial serial_conn_;
+  bool print_output_ = false;
+  bool reset_seen_ = false;
 };
 
-#endif  // MODELIBOT_COMMS_HPP_
+}  // namespace modelidar
+
+#endif  // MODELIDAR__MODELIDAR_COMMS_HPP_
