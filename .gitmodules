@@ -2,3 +2,6 @@
 	path = Lslidar_ROS2_driver
 	url = git@github.com:theseus-cohoma/Lslidar_ROS2_driver.git
     branch = M10P/N10P
+[submodule "modelidar/firmware"]
+	path = modelidar/firmware
+	url = git@github.com:cbares/modelidarust.git
