@@ -1,4 +1,4 @@
-name: Modelibot
+name: modelibot
 
 services:
   modelibot_container:
@@ -6,7 +6,7 @@ services:
     build:
       context: ../
       additional_contexts:
-        source: ../modelidar
+        src: ../modelidar
       dockerfile: .devcontainer/Dockerfile
       args:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
@@ -22,9 +22,10 @@ services:
       #ROS_SUPER_CLIENT: ${_ROS_SUPER_CLIENT:-false}
       # RMW_IMPLEMENTATION: rmw_fastrtps_cpp
       RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
+      # RMW_IMPLEMENTATION: rmw_zenoh_cpp
       #FASTRTPS_DEFAULT_PROFILES_FILE=/home/$_ROS_USER/fastdds_default_profiles.xml
     volumes:
-      - ../:/home/$_ROS_USER/ws/src:cached
+      - ../modelidar:/home/$_ROS_USER/ws/src/modelidar:cached
       - /tmp/.X11-unix:/tmp/.X11-unix:cached
       - /dev/dri:/dev/dri:cached
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority

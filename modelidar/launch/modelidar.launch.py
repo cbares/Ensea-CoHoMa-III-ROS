@@ -27,6 +27,7 @@ package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
 rviz_default_file_name = 'view_robot.rviz'
 controller_file = 'modelidar_controllers.yaml'
+log_level = 'debug'
 
 
 def generate_launch_description():
@@ -101,7 +102,7 @@ def generate_launch_description():
         executable="ros2_control_node",
         parameters=[robot_controllers],
         output="both",
-        #arguments=['--ros-args', '--log-level', 'debug']
+        arguments=['--ros-args', '--log-level', log_level]
     )
     # Robot State Publisher from URDF
     robot_state_pub_node = Node(
@@ -109,7 +110,7 @@ def generate_launch_description():
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description, ],
-        #arguments=['--ros-args', '--log-level', 'debug']
+        arguments=['--ros-args', '--log-level', log_level]
     )
     # RViz
     rviz_node = Node(
@@ -117,16 +118,14 @@ def generate_launch_description():
         executable="rviz2",
         name="rviz2",
         output="log",
-        arguments=["-d", rviz_config_file],
-        # arguments=["-d", rviz_config_file, '--ros-args', '--log-level', 'debug'],
+        arguments=["-d", rviz_config_file, '--ros-args', '--log-level', log_level],
         condition=IfCondition(gui),
     )
 
     joint_state_broadcaster_spawner = Node(
         package="controller_manager",
         executable="spawner",
-        arguments=["joint_state_broadcaster"],
-        # arguments=["joint_state_broadcaster", '--ros-args', '--log-level', 'debug'],
+        arguments=["joint_state_broadcaster", '--ros-args', '--log-level', log_level],
     )
 
     robot_controller_spawner = Node(
@@ -138,7 +137,7 @@ def generate_launch_description():
             robot_controllers,
             "--controller-ros-args",
             f"-r /{package_name}_base_controller/cmd_vel:=/cmd_vel", # remap to /cmd_vel
-  #          '--ros-args', '--log-level', 'debug'
+            '--ros-args', '--log-level', log_level
         ],
     )
 

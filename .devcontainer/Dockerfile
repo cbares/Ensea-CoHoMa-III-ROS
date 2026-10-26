@@ -45,6 +45,8 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
 
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-slam-toolbox ros-${ROS_DISTRO}-nav2-route
 
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-sdformat-urdf
+
 ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}
 RUN mkdir -p /home/${USERNAME}/ws/src
@@ -59,9 +61,8 @@ RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --igno
 RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.bashrc
 RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
 
-RUN --mount=type=bind,source=modelidar,target=src/modelidar \
-    --mount=type=bind,source=Lslidar_ROS2_driver,target=src/Lslidar_ROS2_driver \
-    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install" 
+RUN --mount=type=bind,from=src,target=src/modelidar \
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --packages-select modelidar" 
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash -l
@@ -74,6 +75,6 @@ EOF
 RUN sudo chmod +x /entrypoint.sh 
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD [ "ros2", "launch", "modelidar", "view_robot.launch.py"]
-# CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
+# CMD [ "ros2", "launch", "modelidar", "view_robot.launch.py"]
+CMD [ "ros2", "launch", "modelidar", "modelidar.launch.py"]
 # CMD ["tail", "-f", "/dev/null"]

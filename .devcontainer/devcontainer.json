@@ -1,8 +1,15 @@
 {
     "name": "ROS 2 Development Container",
     "remoteUser": "theseus",
-    "dockerComposeFile": "docker-compose.modelibot.yaml",
+    "dockerComposeFile": [
+        "../Lslidar_ROS2_driver/docker-compose.yaml",
+        "docker-compose.modelibot.yaml"
+    ],
     "service": "modelibot_container",
+    "runServices": [
+        "modelibot_container",
+        "lslidar_container"
+    ],
     "workspaceFolder": "/home/theseus/ws",
     "customizations": {
         "vscode": {
