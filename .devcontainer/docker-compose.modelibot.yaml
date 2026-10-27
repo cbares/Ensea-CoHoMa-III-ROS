@@ -13,6 +13,9 @@ services:
     privileged: true
     environment:
       DISPLAY: ${DISPLAY:-:0}
+      # GNOME/Wayland: Xwayland's cookie is in /run/user/<uid> (mounted below), with a new
+      # name at each login: rebuild/recreate the container after logging in again.
+      XAUTHORITY: ${XAUTHORITY:-/home/$_ROS_USER/.Xauthority}
       XDG_RUNTIME_DIR: /run/user/${UID:-1000}
       ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
       ROS_STATIC_PEERS: $_ROS_STATIC_PEERS

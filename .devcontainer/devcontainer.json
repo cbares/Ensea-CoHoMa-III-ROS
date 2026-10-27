@@ -16,7 +16,8 @@
             "extensions":[
                 "ms-vscode.cpptools-extension-pack",
                 "donjayamanne.python-extension-pack",
-                "eamodio.gitlens"
+                "eamodio.gitlens",
+                "anthropic.claude-code"
                 ],
             "settings": {
                 "C_Cpp.default.includePath": [

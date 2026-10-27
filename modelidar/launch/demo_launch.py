@@ -1,7 +1,11 @@
+"""Robot model in RViz, moved by mock_state_publisher (no hardware, no ros2_control)."""
+
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
-from launch.substitutions import LaunchConfiguration, Command, PathJoinSubstitution
+from launch.substitutions import (
+    Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution)
 from launch_ros.actions import Node
+from launch_ros.descriptions import ParameterValue
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -9,60 +13,59 @@ package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
 rviz_default_file_name = 'wild_thumper.rviz'
 
+
 def generate_launch_description():
-    use_sim_time = LaunchConfiguration('use_sim_time', default=False)
-    urdf_file_name = LaunchConfiguration('urdf_name', default=urdf_default_file_name)
-    rviz_file_name = LaunchConfiguration('rviz_name', default=rviz_default_file_name)
+    declared_arguments = [
+        DeclareLaunchArgument(
+            'use_sim_time',
+            default_value='false',
+            description='Use simulation (Gazebo) clock if true',
+        ),
+        DeclareLaunchArgument(
+            'urdf_name',
+            default_value=urdf_default_file_name,
+            description='URDF model file name',
+        ),
+        DeclareLaunchArgument(
+            'rviz_name',
+            default_value=rviz_default_file_name,
+            description='RVIZ configuration file name',
+        ),
+    ]
 
-    urdf  = PathJoinSubstitution([
-        FindPackageShare(package=package_name)                              ,
-        'urdf',
-        urdf_file_name])
-    
-    rviz = PathJoinSubstitution([
-        FindPackageShare(package=package_name),
-        'urdf',
-        rviz_file_name])
-    
-    use_sim_time_arg = DeclareLaunchArgument(
-        'use_sim_time',
-        default_value=use_sim_time,
-        description='Use simulation (Gazebo) clock if true',
-    )
-    
-    urdf_arg = DeclareLaunchArgument(
-        'urdf_name',
-        default_value=urdf_file_name,
-        description='URDF model file name',
-    )
-    
-    rviz_arg = DeclareLaunchArgument(
-        'rviz_name',
-        default_value=rviz_file_name,
-        description='RVIZ configuration file name',
-    )
+    use_sim_time = ParameterValue(LaunchConfiguration('use_sim_time'), value_type=bool)
+    urdf = PathJoinSubstitution(
+        [FindPackageShare(package_name), 'urdf', LaunchConfiguration('urdf_name')])
+    rviz = PathJoinSubstitution(
+        [FindPackageShare(package_name), 'urdf', LaunchConfiguration('rviz_name')])
 
-    return LaunchDescription([
-        use_sim_time_arg,
-        urdf_arg,
-        rviz_arg,
+    # xacro output is a string: without ParameterValue, launch tries to parse it as YAML.
+    robot_description = ParameterValue(
+        Command([PathJoinSubstitution([FindExecutable(name='xacro')]), ' ', urdf]),
+        value_type=str)
+
+    nodes = [
         Node(
             package='robot_state_publisher',
             executable='robot_state_publisher',
             name='robot_state_publisher',
             output='screen',
-            parameters=[{'use_sim_time': use_sim_time, 'robot_description': Command(['xacro', ' ', urdf])}],
-            ),
+            parameters=[{'use_sim_time': use_sim_time, 'robot_description': robot_description}],
+        ),
         Node(
-            package='modelidar',
+            package=package_name,
             executable='state_publisher',
             name='mock_state_publisher',
-            output='screen'
-            ),
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
         Node(
             package='rviz2',
             executable='rviz2',
-            output="log",
-            arguments=['-d', rviz]
-            ),
-    ])
+            output='log',
+            arguments=['-d', rviz],
+            parameters=[{'use_sim_time': use_sim_time}],
+        ),
+    ]
+
+    return LaunchDescription(declared_arguments + nodes)

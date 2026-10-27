@@ -204,7 +204,8 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_configure(
   comms_.take_reset();
   left_wheel_.zero(state.left.position);
   right_wheel_.zero(state.right.position);
-  failures_ = 0;
+  read_failures_ = 0;
+  write_failures_ = 0;
   apply_state(state);
   for (const auto & [name, descr] : joint_command_interfaces_)
   {
@@ -247,7 +248,8 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_activate(
     return hardware_interface::CallbackReturn::ERROR;
   }
 
-  failures_ = 0;
+  read_failures_ = 0;
+  write_failures_ = 0;
   apply_state(state);
   for (const auto & [name, descr] : joint_command_interfaces_)
   {
@@ -356,13 +358,14 @@ void ModelidarSystemHardware::apply_state(const BoardState & state)
   }
 }
 
-hardware_interface::return_type ModelidarSystemHardware::exchange_failed(const char * what)
+hardware_interface::return_type ModelidarSystemHardware::exchange_failed(
+  const char * what, int & failures)
 {
-  ++failures_;
+  ++failures;
   RCLCPP_WARN_THROTTLE(
-    get_logger(), *get_clock(), 1000, "No valid answer to %s (%d in a row)", what, failures_);
-  if (failures_ >= MAX_FAILURES) {
-    RCLCPP_ERROR(get_logger(), "Board not answering: %d failed exchanges", failures_);
+    get_logger(), *get_clock(), 1000, "No valid answer to %s (%d in a row)", what, failures);
+  if (failures >= MAX_FAILURES) {
+    RCLCPP_ERROR(get_logger(), "Board not answering: %d %s failures in a row", failures, what);
     return hardware_interface::return_type::ERROR;
   }
   return hardware_interface::return_type::OK;
@@ -374,13 +377,13 @@ hardware_interface::return_type ModelidarSystemHardware::read(
   BoardState state;
   try {
     if (!comms_.query(state)) {
-      return exchange_failed("state query");
+      return exchange_failed("state query", read_failures_);
     }
   } catch (const std::exception & e) {
     RCLCPP_ERROR(get_logger(), "Serial error while reading: %s", e.what());
     return hardware_interface::return_type::ERROR;
   }
-  failures_ = 0;
+  read_failures_ = 0;
   apply_state(state);
 
   RCLCPP_DEBUG_THROTTLE(
@@ -403,13 +406,13 @@ hardware_interface::return_type ModelidarSystemHardware::write(
     // Regulated by the board (rad/s). Sent every cycle: it also keeps the
     // firmware USB timeout (500 ms) from stopping the motors.
     if (!comms_.set_velocity(left, right, state)) {
-      return exchange_failed("velocity command");
+      return exchange_failed("velocity command", write_failures_);
     }
   } catch (const std::exception & e) {
     RCLCPP_ERROR(get_logger(), "Serial error while writing: %s", e.what());
     return hardware_interface::return_type::ERROR;
   }
-  failures_ = 0;
+  write_failures_ = 0;
   apply_state(state);
 
   RCLCPP_DEBUG_THROTTLE(

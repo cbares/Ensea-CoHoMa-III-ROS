@@ -80,6 +80,12 @@ install(
   DIRECTORY config
   DESTINATION share/modelidar
 )
+# Fake robot motion for RViz (launch/demo_launch.py): ros2 run modelidar state_publisher
+install(
+  PROGRAMS modelidar/mock_state_publisher.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME state_publisher
+)
 
 
 install(TARGETS modelidar

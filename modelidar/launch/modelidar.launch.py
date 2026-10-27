@@ -27,7 +27,6 @@ package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
 rviz_default_file_name = 'view_robot.rviz'
 controller_file = 'modelidar_controllers.yaml'
-log_level = 'debug'
 
 
 def generate_launch_description():
@@ -62,9 +61,18 @@ def generate_launch_description():
             description='Use simulation (Gazebo) clock if true',
         )
     )
-    
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "log_level",
+            default_value="info",
+            choices=["debug", "info", "warn", "error", "fatal"],
+            description="Log level of all the nodes (debug shows each serial exchange).",
+        )
+    )
+
     # Initialize Arguments
     gui = LaunchConfiguration("gui")
+    log_level = LaunchConfiguration("log_level")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     use_sim_time = LaunchConfiguration('use_sim_time')
     prefix = LaunchConfiguration("prefix")

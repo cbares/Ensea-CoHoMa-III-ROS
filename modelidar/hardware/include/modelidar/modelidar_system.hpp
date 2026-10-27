@@ -89,8 +89,8 @@ private:
   void stop_motors();
   /// Publishes a state line to the state interfaces and logs owner / fault changes.
   void apply_state(const BoardState & state);
-  /// Counts consecutive failed exchanges: ERROR once there are too many.
-  hardware_interface::return_type exchange_failed(const char * what);
+  /// Counts a failed exchange in `failures` (consecutive ones): ERROR once there are too many.
+  hardware_interface::return_type exchange_failed(const char * what, int & failures);
 
   Config cfg_;
   ModelidarComms comms_;
@@ -98,7 +98,9 @@ private:
   Wheel right_wheel_;
   std::string owner_ = "USB";
   std::string fault_ = "-";
-  int failures_ = 0;
+  /// Consecutive failures, counted apart: a good read must not hide failing writes.
+  int read_failures_ = 0;
+  int write_failures_ = 0;
 };
 
 }  // namespace modelidar
