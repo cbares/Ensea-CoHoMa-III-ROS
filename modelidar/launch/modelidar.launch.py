@@ -68,8 +68,9 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "imu",
-            default_value="true",
-            description="Start the MPU9250 IMU driver (I2C bus 1), not with the mock hardware.",
+            default_value="false",
+            description="Also start the MPU9250 IMU driver (I2C bus 1). On the robot it runs "
+            "in its own container (imu_container): keep false there.",
         )
     )
     declared_arguments.append(
@@ -179,14 +180,14 @@ def generate_launch_description():
         arguments=['--ros-args', '--log-level', log_level]
     )
     # IMU: publishes /imu/data_raw and /imu/mag. It calibrates at start (about 1000 samples):
-    # the robot must stay still and flat. Settings: mpu9250driver/params/mpu9250.yaml.
+    # the robot must stay still and flat. Settings: config/mpu9250.yaml.
     imu_node = Node(
         package="mpu9250driver",
         executable="mpu9250driver",
         name="mpu9250driver_node",
         output="both",
         parameters=[
-            PathJoinSubstitution([FindPackageShare("mpu9250driver"), "params", "mpu9250.yaml"]),
+            PathJoinSubstitution([FindPackageShare(package_name), "config", "mpu9250.yaml"]),
             # link of the URDF (ParameterValue: one string, not a list)
             {"frame_id": ParameterValue([prefix, "base_imu_link"], value_type=str)},
         ],

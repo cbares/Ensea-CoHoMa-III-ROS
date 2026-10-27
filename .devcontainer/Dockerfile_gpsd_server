@@ -32,6 +32,10 @@ RUN apt-get update && apt-get install -y rtklib
 
 RUN apt-get update && apt-get install -y libboost-dev
 
+# Same middleware as the other containers (router: zenoh_router, docker-compose.modelibot.yaml)
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-zenoh-cpp
+ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
+
 
 ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}

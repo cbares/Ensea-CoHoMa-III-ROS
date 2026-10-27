@@ -1,6 +1,25 @@
 name: modelibot
 
+# ROS settings shared by every container of the robot (same values in
+# docker-compose.gpsd-server.yaml and ../Lslidar_ROS2_driver/docker-compose.yaml).
+# Zenoh: the nodes talk through the router of the host (zenoh_router, tcp/localhost:7447).
+x-ros-env: &ros-env
+  ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
+  RMW_IMPLEMENTATION: rmw_zenoh_cpp
+
 services:
+  # One per host, started first: without it the nodes of the containers do not see each other.
+  zenoh_router:
+    image: ros_modelibot
+    pull_policy: never  # built by modelibot_container
+    environment: *ros-env
+    network_mode: "host"
+    ipc: "host"
+    user: $_ROS_USER
+    restart: unless-stopped
+    command: ros2 run rmw_zenoh_cpp rmw_zenohd
+
+  # Base (ros2_control), robot description, twist_mux, RViz. Also the dev container.
   modelibot_container:
     image: ros_modelibot
     build:
@@ -11,23 +30,16 @@ services:
       dockerfile: .devcontainer/Dockerfile
       args:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
+    depends_on:
+      - zenoh_router
     privileged: true
     environment:
+      <<: *ros-env
       DISPLAY: ${DISPLAY:-:0}
       # GNOME/Wayland: Xwayland's cookie is in /run/user/<uid> (mounted below), with a new
       # name at each login: rebuild/recreate the container after logging in again.
       XAUTHORITY: ${XAUTHORITY:-/home/$_ROS_USER/.Xauthority}
       XDG_RUNTIME_DIR: /run/user/${UID:-1000}
-      ROS_AUTOMATIC_DISCOVERY_RANGE: LOCALHOST
-      ROS_STATIC_PEERS: $_ROS_STATIC_PEERS
-      ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
-      #ROS_DISCOVERY_SERVER: $_DISCOVERY_SERVER_LIST
-      #FASTDDS_BUILTIN_TRANSPORTs: "LARGE_DATA"
-      #ROS_SUPER_CLIENT: ${_ROS_SUPER_CLIENT:-false}
-      # RMW_IMPLEMENTATION: rmw_fastrtps_cpp
-      RMW_IMPLEMENTATION: rmw_cyclonedds_cpp
-      # RMW_IMPLEMENTATION: rmw_zenoh_cpp
-      #FASTRTPS_DEFAULT_PROFILES_FILE=/home/$_ROS_USER/fastdds_default_profiles.xml
     volumes:
       - ../modelidar:/home/$_ROS_USER/ws/src/modelidar:cached
       - ../mpu9250_ROS2_driver:/home/$_ROS_USER/ws/src/mpu9250_ROS2_driver:cached
@@ -45,9 +57,30 @@ services:
     ipc: "host"
     pid: "host"
     user: $_ROS_USER
-    # /dev/i2c-* (IMU) belong to the host's i2c group, whose id differs between hosts
+    tty: true
+    #command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"
+
+  # IMU MPU9250 on I2C bus 1. Calibrates at start: the robot must stay still and flat.
+  imu_container:
+    image: ros_modelibot
+    pull_policy: never  # built by modelibot_container
+    depends_on:
+      - zenoh_router
+    environment: *ros-env
+    volumes:
+      # the workspace is built with --symlink-install: launch and config files live in src
+      - ../modelidar:/home/$_ROS_USER/ws/src/modelidar:ro
+      - ../mpu9250_ROS2_driver:/home/$_ROS_USER/ws/src/mpu9250_ROS2_driver:ro
+      - /dev:/dev:bind
+    privileged: true
+    network_mode: "host"
+    ipc: "host"
+    user: $_ROS_USER
+    # /dev/i2c-* belong to the host's i2c group, whose id differs between hosts
     # (getent group i2c): set _I2C_GID in .env.
     group_add:
       - "${_I2C_GID:-164}"
-    tty: true
-    #command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"
+    restart: unless-stopped
+    command: >-
+      ros2 launch mpu9250driver mpu9250driver_launch.py
+      params_file:=/home/${_ROS_USER}/ws/install/modelidar/share/modelidar/config/mpu9250.yaml

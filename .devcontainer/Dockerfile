@@ -43,7 +43,8 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-ros2-controllers-test
 RUN apt-get update && apt-get install -y libpcl-dev ros-${ROS_DISTRO}-pcl-ros ros-${ROS_DISTRO}-diagnostic-updater 
 RUN apt-get update && apt-get install -y libflann-dev libpcap-dev
 
-RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-cyclonedds-cpp
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-cyclonedds-cpp ros-${ROS_DISTRO}-rmw-zenoh-cpp
+ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
 
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-slam-toolbox ros-${ROS_DISTRO}-nav2-route
 

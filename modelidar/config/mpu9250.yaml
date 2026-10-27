@@ -1,0 +1,26 @@
+# IMU MPU9250 of the robot (package mpu9250driver, see mpu9250_ROS2_driver/params/mpu9250.yaml).
+# Used by the imu_container service (.devcontainer/docker-compose.modelibot.yaml) and by
+# launch/modelidar.launch.py imu:=true.
+mpu9250driver_node:
+  ros__parameters:
+    frame_id: base_imu_link  # link of the URDF (urdf/wild_thumper.urdf.xacro)
+    # Calibrates gyroscope and accelerometer at start (about 1000 samples): robot still and
+    # flat. Once the offsets are known, set calibrate: False and copy them below.
+    calibrate: True
+    # Gyroscope range: 0 -> +-250°/s, 1 -> +-500°/s, 2 -> +-1000°/s, 3 -> +-2000°/s
+    gyro_range: 0
+    # Acceleration range: 0 -> +-2g, 1 -> +-4g, 2 -> +-8g, 3 -> +-16g
+    accel_range: 0
+    # Digital low pass filter bandwidth [0-6]: 0 -> 260Hz, 1 -> 184Hz, 2 -> 94Hz, 3 -> 44Hz,
+    # 4 -> 21Hz, 5 -> 10Hz, 6 -> 5Hz
+    dlpf_bandwidth: 2
+    # Overridden by the calibration when calibrate is True
+    gyro_x_offset: 0.0  # [deg/s]
+    gyro_y_offset: 0.0  # [deg/s]
+    gyro_z_offset: 0.0  # [deg/s]
+    accel_x_offset: 0.0  # [m/s²]
+    accel_y_offset: 0.0  # [m/s²]
+    accel_z_offset: 0.0  # [m/s²]
+    frequency: 10  # [Hz]
+    # REP103 units (rad/s, m/s², tesla) for /imu/data_raw and /imu/mag
+    rep103: True
