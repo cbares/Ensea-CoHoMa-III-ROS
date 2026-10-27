@@ -7,6 +7,7 @@ services:
       context: ../
       additional_contexts:
         src: ../modelidar
+        mpu9250: ../mpu9250_ROS2_driver
       dockerfile: .devcontainer/Dockerfile
       args:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
@@ -29,6 +30,7 @@ services:
       #FASTRTPS_DEFAULT_PROFILES_FILE=/home/$_ROS_USER/fastdds_default_profiles.xml
     volumes:
       - ../modelidar:/home/$_ROS_USER/ws/src/modelidar:cached
+      - ../mpu9250_ROS2_driver:/home/$_ROS_USER/ws/src/mpu9250_ROS2_driver:cached
       - /tmp/.X11-unix:/tmp/.X11-unix:cached
       - /dev/dri:/dev/dri:cached
       - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
@@ -43,5 +45,9 @@ services:
     ipc: "host"
     pid: "host"
     user: $_ROS_USER
+    # /dev/i2c-* (IMU) belong to the host's i2c group, whose id differs between hosts
+    # (getent group i2c): set _I2C_GID in .env.
+    group_add:
+      - "${_I2C_GID:-164}"
     tty: true
     #command: "ros2 launch modelidar modelidar.launch.py use_mock_hardware:=true gui:=false"

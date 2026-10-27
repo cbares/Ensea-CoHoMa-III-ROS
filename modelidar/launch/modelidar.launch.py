@@ -67,6 +67,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "imu",
+            default_value="true",
+            description="Start the MPU9250 IMU driver (I2C bus 1), not with the mock hardware.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "log_level",
             default_value="info",
             choices=["debug", "info", "warn", "error", "fatal"],
@@ -79,6 +86,7 @@ def generate_launch_description():
     log_level = LaunchConfiguration("log_level")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     device = LaunchConfiguration("device")
+    imu = LaunchConfiguration("imu")
     prefix = LaunchConfiguration("prefix")
 
     # Get URDF via xacro
@@ -170,6 +178,22 @@ def generate_launch_description():
         remappings=[("cmd_vel_out", f"/{package_name}_base_controller/cmd_vel")],
         arguments=['--ros-args', '--log-level', log_level]
     )
+    # IMU: publishes /imu/data_raw and /imu/mag. It calibrates at start (about 1000 samples):
+    # the robot must stay still and flat. Settings: mpu9250driver/params/mpu9250.yaml.
+    imu_node = Node(
+        package="mpu9250driver",
+        executable="mpu9250driver",
+        name="mpu9250driver_node",
+        output="both",
+        parameters=[
+            PathJoinSubstitution([FindPackageShare("mpu9250driver"), "params", "mpu9250.yaml"]),
+            # link of the URDF (ParameterValue: one string, not a list)
+            {"frame_id": ParameterValue([prefix, "base_imu_link"], value_type=str)},
+        ],
+        arguments=['--ros-args', '--log-level', log_level],
+        condition=IfCondition(PythonExpression(
+            ["'", imu, "'.lower() == 'true' and '", use_mock_hardware, "'.lower() != 'true'"])),
+    )
     # RViz
     rviz_node = Node(
         package="rviz2",
@@ -186,6 +210,7 @@ def generate_launch_description():
         controllers_spawner,
         board_supervisor,
         twist_mux_node,
+        imu_node,
         rviz_node,
     ]
 

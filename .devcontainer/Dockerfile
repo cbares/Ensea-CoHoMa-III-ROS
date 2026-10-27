@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rqt*
 
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-ros2-control ros-${ROS_DISTRO}-ros2-controllers
 RUN apt-get update && apt-get install -y libcxx-serial-dev libcxx-serial1
+# IMU (mpu9250_ROS2_driver)
+RUN apt-get update && apt-get install -y libi2c-dev
 
 RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-navigation2 \
     ros-${ROS_DISTRO}-nav2-bringup ros-${ROS_DISTRO}-nav2-rviz-plugins ros-${ROS_DISTRO}-twist-mux
@@ -62,7 +64,8 @@ RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.b
 RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
 
 RUN --mount=type=bind,from=src,target=src/modelidar \
-    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --packages-select modelidar" 
+    --mount=type=bind,from=mpu9250,target=src/mpu9250_ROS2_driver \
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --packages-select modelidar mpu9250driver"
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash -l
