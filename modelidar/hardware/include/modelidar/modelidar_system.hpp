@@ -42,7 +42,7 @@ struct Config
   std::string right_wheel_name = "";
   std::string device = "";
   int baud_rate = 115200;
-  int timeout_ms = 50;
+  int timeout_ms = 20;
   int enc_counts_per_rev = 544;
   /// Velocity loop gains sent at activation, only if all four are given in the URDF.
   bool send_gains = false;
@@ -54,12 +54,9 @@ class ModelidarSystemHardware : public hardware_interface::SystemInterface
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(ModelidarSystemHardware)
 
-  // hardware_interface::CallbackReturn on_init(
-  //   const hardware_interface::HardwareInfo & info) override;
-
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareComponentInterfaceParams & params) override;
-  
+
   hardware_interface::CallbackReturn on_configure(
     const rclcpp_lifecycle::State & previous_state) override;
 

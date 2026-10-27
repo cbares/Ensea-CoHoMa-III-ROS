@@ -12,7 +12,7 @@
           <param name="right_wheel_joint">${prefix}virtual_right_wheel_joint</param> <!-- this value is also in controllers yaml file -->
           <param name="device">${device}</param> <!-- /dev/modelidar: udev/99-modelidar.rules -->
           <param name="baud_rate">115200</param>
-          <param name="timeout">50</param> <!-- ms, per answer of the board (an answer takes ~5 ms) -->
+          <param name="timeout">20</param> <!-- ms, per answer of the board (an answer takes ~5 ms; one cycle is 33 ms at 30 Hz) -->
           <param name="enc_counts_per_rev">544</param> <!-- 16x34 for encoder DAGU RS003-Enco -->
           <!-- Velocity loop gains, sent to the board at activation (all four, or none to keep
                the firmware defaults). See firmware/README.md, "Régulation de vitesse".

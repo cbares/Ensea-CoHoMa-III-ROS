@@ -73,6 +73,12 @@ install(
   DESTINATION lib/${PROJECT_NAME}
   RENAME state_publisher
 )
+# Activates the board and the controllers once the board is there (launch/modelidar.launch.py)
+install(
+  PROGRAMS modelidar/board_supervisor.py
+  DESTINATION lib/${PROJECT_NAME}
+  RENAME board_supervisor
+)
 
 
 install(TARGETS modelidar
@@ -92,6 +98,13 @@ if(BUILD_TESTING)
   # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  # Serial protocol and wheel conversions, without hardware
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_modelidar_comms test/test_modelidar_comms.cpp)
+  target_include_directories(test_modelidar_comms PRIVATE hardware/include)
+  target_link_libraries(test_modelidar_comms cxx-serial)
+  ament_target_dependencies(test_modelidar_comms hardware_interface)
 endif()
 
 ## EXPORTS

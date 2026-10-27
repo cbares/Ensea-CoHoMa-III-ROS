@@ -13,10 +13,10 @@
 # limitations under the License.
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler
+from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.event_handlers import OnProcessExit
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, LaunchConfiguration
+from launch.substitutions import (
+    Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, PythonExpression)
 
 from launch_ros.descriptions import ParameterValue
 from launch_ros.actions import Node
@@ -27,6 +27,10 @@ package_name = 'modelidar'
 urdf_default_file_name = 'wild_thumper.urdf.xacro'
 rviz_default_file_name = 'view_robot.rviz'
 controller_file = 'modelidar_controllers.yaml'
+twist_mux_file = 'twist-mux.yaml'
+# Name of the ros2_control tag in the URDF (urdf/wild_thumper.urdf.xacro).
+hardware_name = 'Modelidar'
+controllers = ['joint_state_broadcaster', f'{package_name}_base_controller']
 
 
 def generate_launch_description():
@@ -102,17 +106,38 @@ def generate_launch_description():
         [FindPackageShare(package_name), "config", controller_file]
     )
     
+    twist_mux_config = PathJoinSubstitution(
+        [FindPackageShare(package_name), "config", twist_mux_file]
+    )
+
     rviz_config_file = PathJoinSubstitution(
         [FindPackageShare(package_name), "urdf", rviz_default_file_name]
     )
 
     # Nodes
-    # Controller Manager
+    # Controller Manager. The hardware starts UNCONFIGURED, so that a missing board does
+    # not abort it: board_supervisor activates it (and the controllers) once it is there.
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        parameters=[robot_controllers],
+        parameters=[
+            robot_controllers,
+            {"hardware_components_initial_state.unconfigured": [hardware_name]},
+        ],
         output="both",
+        arguments=['--ros-args', '--log-level', log_level]
+    )
+    board_supervisor = Node(
+        package=package_name,
+        executable="board_supervisor",
+        output="both",
+        parameters=[{
+            "hardware": hardware_name,
+            # Wait for the serial device, except with the mock hardware.
+            "device": PythonExpression(
+                ["'' if '", use_mock_hardware, "'.lower() == 'true' else '", device, "'"]),
+            "controllers": controllers,
+        }],
         arguments=['--ros-args', '--log-level', log_level]
     )
     # Robot State Publisher from URDF
@@ -120,7 +145,29 @@ def generate_launch_description():
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
-        parameters=[robot_description, ],
+        parameters=[robot_description],
+        arguments=['--ros-args', '--log-level', log_level]
+    )
+    # Load and configure the controllers; board_supervisor activates them.
+    controllers_spawner = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=controllers + [
+            "--inactive",
+            "--param-file",
+            robot_controllers,
+            '--ros-args', '--log-level', log_level
+        ],
+    )
+    # Velocity commands go through twist_mux (config/twist-mux.yaml): joystick, then
+    # keyboard, then /cmd_vel (navigation, any other tool). Only twist_mux talks to the
+    # base controller.
+    twist_mux_node = Node(
+        package="twist_mux",
+        executable="twist_mux",
+        output="both",
+        parameters=[twist_mux_config],
+        remappings=[("cmd_vel_out", f"/{package_name}_base_controller/cmd_vel")],
         arguments=['--ros-args', '--log-level', log_level]
     )
     # RViz
@@ -133,48 +180,13 @@ def generate_launch_description():
         condition=IfCondition(gui),
     )
 
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", '--ros-args', '--log-level', log_level],
-    )
-
-    robot_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=[
-            f"{package_name}_base_controller",
-            "--param-file",
-            robot_controllers,
-            "--controller-ros-args",
-            f"-r /{package_name}_base_controller/cmd_vel:=/cmd_vel", # remap to /cmd_vel
-            '--ros-args', '--log-level', log_level
-        ],
-    )
-
-    # Delay rviz start after `joint_state_broadcaster`
-    delay_rviz_after_joint_state_broadcaster_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=joint_state_broadcaster_spawner,
-            on_exit=[rviz_node],
-        )
-    )
-
-    # Delay start of joint_state_broadcaster after `robot_controller`
-    # TODO(anyone): This is a workaround for flaky tests. Remove when fixed.
-    delay_joint_state_broadcaster_after_robot_controller_spawner = RegisterEventHandler(
-        event_handler=OnProcessExit(
-            target_action=robot_controller_spawner,
-            on_exit=[joint_state_broadcaster_spawner],
-        )
-    )
-
     nodes = [
         control_node,
         robot_state_pub_node,
-        robot_controller_spawner,
-        delay_rviz_after_joint_state_broadcaster_spawner,
-        delay_joint_state_broadcaster_after_robot_controller_spawner,
+        controllers_spawner,
+        board_supervisor,
+        twist_mux_node,
+        rviz_node,
     ]
 
     return LaunchDescription(declared_arguments + nodes)

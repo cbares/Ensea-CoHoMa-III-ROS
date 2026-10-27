@@ -1,16 +1,25 @@
+# Velocity command sources, by priority (highest wins while it publishes). The output
+# goes to /modelidar_base_controller/cmd_vel (launch/modelidar.launch.py).
+#   ros2 topic pub --once /e_stop std_msgs/msg/Bool "data: true"    stops the robot
+#   ros2 topic pub --once /e_stop std_msgs/msg/Bool "data: false"   gives it back
 twist_mux:
   ros__parameters:
+    use_stamped: true  # the diff_drive_controller of Jazzy expects TwistStamped
     topics:
-      navigation:
+      navigation:  # Nav2, rqt_robot_steering...
         topic: /cmd_vel
-        priority: 0
-        timeout: 0.5
-      joystick:
-        topic: /joy_teleop/cmd_vel
-        priority: 20
+        priority: 10
         timeout: 0.5
       keyboard:
         topic: /keyboard_teleop/cmd_vel
-        priority: 10
+        priority: 20
         timeout: 0.5
-        
+      joystick:
+        topic: /joy_teleop/cmd_vel
+        priority: 30
+        timeout: 0.5
+    locks:
+      e_stop:
+        topic: /e_stop
+        timeout: 0.0  # no timeout: stays locked until "data: false"
+        priority: 255

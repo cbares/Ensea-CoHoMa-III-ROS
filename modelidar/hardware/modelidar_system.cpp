@@ -65,7 +65,7 @@ hardware_interface::CallbackReturn ModelidarSystemHardware::on_init(
     cfg_.right_wheel_name = param(info, "right_wheel_joint");  // also in the controllers yaml file
     cfg_.device = param(info, "device");
     cfg_.baud_rate = std::stoi(param(info, "baud_rate", "115200"));
-    cfg_.timeout_ms = std::stoi(param(info, "timeout", "50"));
+    cfg_.timeout_ms = std::stoi(param(info, "timeout", "20"));
     cfg_.enc_counts_per_rev = std::stoi(param(info, "enc_counts_per_rev", "544"));
 
     const char * gains[] = {"kp", "ki", "kff", "dmin"};

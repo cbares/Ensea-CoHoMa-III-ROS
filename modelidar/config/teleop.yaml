@@ -1,6 +1,7 @@
+# Keyboard teleoperation: see launch/teleop.launch.py for the command line.
 /teleop_twist_keyboard:
   ros__parameters:
     frame_id: base_footprint
-    stamped: true
+    stamped: true  # twist_mux use_stamped
     start_type_description_service: true
     use_sim_time: false
