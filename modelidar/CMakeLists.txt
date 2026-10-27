@@ -41,19 +41,6 @@ add_library(
 
 target_link_libraries(modelidar PRIVATE cxx-serial)
 
-
-# target_compile_definitions(modelidar
-# PRIVATE "DEMO_NODES_CPP_BUILDING_DLL")
-# ament_target_dependencies(modelidar
-#   "controller_manager"
-#   "hardware_interface"
-#   "pluginlib"
-#   "rclcpp"
-#   "rclcpp_lifecycle"
-#   "std_msgs"
-# )
-
-
 target_compile_features(modelidar PUBLIC cxx_std_17)
 target_include_directories(modelidar PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/hardware/include>
@@ -77,7 +64,7 @@ install(
   DESTINATION share/modelidar
 )
 install(
-  DIRECTORY config
+  DIRECTORY config udev
   DESTINATION share/modelidar
 )
 # Fake robot motion for RViz (launch/demo_launch.py): ros2 run modelidar state_publisher
@@ -95,13 +82,6 @@ install(TARGETS modelidar
   RUNTIME DESTINATION bin
 )
 
-# if(BUILD_TESTING)
-#   find_package(ament_cmake_pytest REQUIRED)
-
-#   ament_add_pytest_test(example_2_urdf_xacro test/test_urdf_xacro.py)
-#   ament_add_pytest_test(view_example_2_launch test/test_view_robot_launch.py)
-#   ament_add_pytest_test(run_example_2_launch test/test_diffbot_launch.py)
-# endif()
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   # the following line skips the linter which checks for copyrights

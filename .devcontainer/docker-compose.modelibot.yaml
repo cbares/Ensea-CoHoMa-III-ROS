@@ -35,6 +35,10 @@ services:
       - /dev/input:/dev/input:bind
       - /dev:/dev:bind
       - /run/user/${UID:-1000}:/run/user/${UID:-1000}
+      # Claude Code: same login, settings and memory as on the host
+      - ~/.claude:/home/$_ROS_USER/.claude
+      - ~/.claude.json:/home/$_ROS_USER/.claude.json
+
     network_mode: "host"
     ipc: "host"
     pid: "host"

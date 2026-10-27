@@ -1,0 +1,7 @@
+# rosdep key for the serial library, which has no official one.
+# One-time setup:
+#   echo "yaml file://$(realpath rosdep.yaml)" | sudo tee /etc/ros/rosdep/sources.list.d/50-modelidar.list
+#   rosdep update
+cxx-serial:
+  ubuntu: [libcxx-serial-dev]
+  debian: [libcxx-serial-dev]

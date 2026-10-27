@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
 <robot name="wild_thumper" xmlns:xacro="http://ros.org/wiki/xacro">
 	<xacro:arg name="prefix" default="" />
-  	<xacro:arg name="use_mock_hardware" default="false" />
+	<xacro:arg name="use_mock_hardware" default="false" />
+	<xacro:arg name="device" default="/dev/modelidar" />
 
 	<xacro:property name="PI" value="3.1415926535897931" />
 
@@ -131,14 +132,6 @@
 			</inertial>
 		</link>
 
-		<gazebo reference="${prefix}${pos}_${side}_wheel">
-			<mu1 value="1.0"/>
-			<mu2 value="0.2"/>
-			<kp value="1000000000000.0" />
-			<kd value="1.0" />
-			<fdir1 value="0 1 0"/>
-			<minDepth>0.005</minDepth>
-		</gazebo>
 
 		<joint name="${prefix}${pos}_${side}_wheel_joint" type="continuous">
 			<parent link="$(arg prefix)base_link"/>
@@ -148,15 +141,6 @@
 			<mimic joint="${prefix}virtual_${side}_wheel_joint" multiplier="1" offset="0"/>
 		</joint>
 
-		<transmission name="${prefix}${pos}_${side}_wheel_trans" type="SimpleTransmission">
-			<type>transmission_interface/SimpleTransmission</type>
-			<joint name="${prefix}${pos}_${side}_wheel_joint">
-				<hardwareInterface>VelocityJointInterface</hardwareInterface>
-			</joint>
-			<actuator name="${prefix}{pos}_${side}_wheel_motor">
-				<mechanicalReduction>1</mechanicalReduction>
-			</actuator>
-		</transmission>
 	</xacro:macro>
 
 
@@ -172,7 +156,7 @@
 		</link>
 		<joint name="${prefix}virtual_${side}_wheel_joint" type="continuous">
 		<parent link="${prefix}base_link"/>
-		<child link="${ prefix}virtual_${side}_wheel"/>
+		<child link="${prefix}virtual_${side}_wheel"/>
 		<origin xyz="${xyz}" rpy="0 0 0"/>
 		<axis xyz="0 1 0"/>
 		<limit effort="100.0" velocity="100.0"/>
@@ -189,105 +173,8 @@
 	<xacro:virtual_wheel prefix="$(arg prefix)" side="left" xyz="0 +${wheelbase/2} ${wheel_radius-base_link_z}"/> <!-- virtual_left_wheel -->
 	<xacro:virtual_wheel prefix="$(arg prefix)" side="right" xyz="0 -${wheelbase/2} ${wheel_radius-base_link_z}"/> <!-- virtual_right_wheel -->
 
-	
-	<gazebo>
-		<plugin name="$(arg prefix)gazebo_ros_control" filename="libgazebo_ros_control.so">
-			<robotNamespace>/</robotNamespace>
-			<robotSimType>gazebo_ros_control/DefaultRobotHWSim</robotSimType>
-		</plugin>
-
-		<plugin name="$(arg prefix)imu_controller" filename="libgazebo_ros_imu.so">
-			<alwaysOn>true</alwaysOn>
-			<updateRate>20.0</updateRate>
-			<bodyName>base_imu_link</bodyName>
-			<topicName>imu</topicName>
-			<gaussianNoise>0.05</gaussianNoise>
-			<frameName>base_imu_link</frameName>
-			<xyzOffsets>0 0 0</xyzOffsets>
-			<rpyOffset>0 0 0</rpyOffset>
-			<serviceName>/default_imu</serviceName>
-		</plugin>
-	</gazebo>
-
-	<xacro:macro name="range_sensor" params="name ros_topic update_rate minRange maxRange fov radiation">
-		<gazebo reference="${name}">
-			<sensor type="ray" name="${name}_sensor">
-				<pose>0 0 0 0 0 0</pose>
-				<update_rate>${update_rate}</update_rate>
-				<visualize>false</visualize>
-				<ray>
-					<scan>
-						<horizontal>
-							<samples>5</samples>
-							<resolution>1</resolution>
-							<min_angle>-${fov/2}</min_angle>
-							<max_angle>${fov/2}</max_angle>
-						</horizontal>
-						<vertical>
-							<samples>5</samples>
-							<resolution>1</resolution>
-							<min_angle>-${fov/2}</min_angle>
-							<max_angle>${fov/2}</max_angle>
-						</vertical>
-					</scan>
-					<range>
-						<min>${minRange}</min>
-						<max>${maxRange}</max>
-						<resolution>0.01</resolution>
-					</range>
-				</ray>
-				<plugin filename="libgazebo_ros_range.so" name="gazebo_ros_range">
-					<gaussianNoise>0.005</gaussianNoise>
-					<alwaysOn>true</alwaysOn>
-					<updateRate>${update_rate}</updateRate>
-					<topicName>${ros_topic}</topicName>
-					<frameName>${name}</frameName>
-					<fov>${fov}</fov>
-					<radiation>${radiation}</radiation>
-				</plugin>
-			</sensor>
-		</gazebo>
-	</xacro:macro>
-
-	<xacro:range_sensor name="$(arg prefix)sonar_forward_left" ros_topic="$(arg prefix)range_forward_left" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
-	<xacro:range_sensor name="$(arg prefix)sonar_forward_right" ros_topic="$(arg prefix)range_forward_right" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
-	<xacro:range_sensor name="$(arg prefix)sonar_backward" ros_topic="$(arg prefix)range_backward" update_rate="10" minRange="0.04" maxRange="0.5" fov="${20*PI/180}" radiation="ultrasound" />
-
-	<gazebo reference="$(arg prefix)laser">
-		<sensor type="ray" name="$(arg prefix)head_rplidar_a2_sensor">
-			<pose>0 0 0 0 0 0</pose>
-			<visualize>false</visualize>
-			<update_rate>12</update_rate>
-			<ray>
-				<scan>
-					<horizontal>
-						<samples>360</samples>
-						<resolution>1</resolution>
-						<min_angle>-3.12413907051</min_angle>
-						<max_angle>3.14159274101</max_angle>
-					</horizontal>
-				</scan>
-				<range>
-					<min>0.20</min>
-					<max>16.0</max>
-					<resolution>0.01</resolution>
-				</range>
-				<noise>
-					<type>gaussian</type>
-					<mean>0.0</mean>
-					<stddev>0.01</stddev>
-				</noise>
-			</ray>
-			<plugin name="gazebo_ros_head_rplidar_a2_controller" filename="libgazebo_ros_laser.so">
-				<topicName>/scan</topicName>
-				<frameName>laser</frameName>
-			</plugin>
-		</sensor>
-	</gazebo>
-
-	<!-- <xacro:include filename="gazebo_control.xacro" /> -->
 	<xacro:include filename="ros2_control.xacro" />
 
-	<xacro:modelidar_ros2_control name="Modelidar" prefix="$(arg prefix)" use_mock_hardware="$(arg use_mock_hardware)"/>
+	<xacro:modelidar_ros2_control name="Modelidar" prefix="$(arg prefix)" use_mock_hardware="$(arg use_mock_hardware)" device="$(arg device)"/>
 
 </robot>

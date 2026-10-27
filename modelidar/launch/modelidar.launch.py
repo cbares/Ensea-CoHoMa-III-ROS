@@ -56,9 +56,9 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
-            'use_sim_time',
-            default_value="false",
-            description='Use simulation (Gazebo) clock if true',
+            "device",
+            default_value="/dev/modelidar",
+            description="Serial port of the board (/dev/modelidar: see udev/99-modelidar.rules).",
         )
     )
     declared_arguments.append(
@@ -74,7 +74,7 @@ def generate_launch_description():
     gui = LaunchConfiguration("gui")
     log_level = LaunchConfiguration("log_level")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
-    use_sim_time = LaunchConfiguration('use_sim_time')
+    device = LaunchConfiguration("device")
     prefix = LaunchConfiguration("prefix")
 
     # Get URDF via xacro
@@ -91,6 +91,9 @@ def generate_launch_description():
             " ",
             "prefix:=",
             prefix,
+            " ",
+            "device:=",
+            device,
         ]
     )
     robot_description = {"robot_description": ParameterValue(robot_description_content, value_type=str)}

@@ -1,0 +1,11 @@
+# Stable name /dev/modelidar for the board: serial port of the Nucleo's ST-Link
+# (USART2, see firmware/README.md), instead of /dev/ttyACM0, /dev/ttyACM1...
+#
+# Install:
+#   sudo cp 99-modelidar.rules /etc/udev/rules.d/
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+#
+# These IDs match every ST-Link (V2-1 and V3). If another ST-Link is plugged in, add
+# the serial number of this one (udevadm info -a -n /dev/ttyACM0 | grep serial):
+#   ATTRS{serial}=="0670FF..."
+SUBSYSTEM=="tty", ATTRS{idVendor}=="0483", ATTRS{idProduct}=="374b|374e|374f|3752|3753|3754", SYMLINK+="modelidar", GROUP="dialout", MODE="0660"
