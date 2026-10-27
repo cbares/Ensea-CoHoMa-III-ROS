@@ -11,8 +11,8 @@
       <xacro:unless value="${use_mock_hardware}">
         <hardware>
           <plugin>modelidar/ModelidarSystemHardware</plugin>
-          <param name="left_wheel_joint">virtual_left_wheel_joint</param> <!-- this value is also in controllers yaml file -->
-          <param name="right_wheel_joint">virtual_right_wheel_joint</param> <!-- this value is also in controllers yaml file -->
+          <param name="left_wheel_joint">${prefix}virtual_left_wheel_joint</param> <!-- this value is also in controllers yaml file -->
+          <param name="right_wheel_joint">${prefix}virtual_right_wheel_joint</param> <!-- this value is also in controllers yaml file -->
           <param name="device">/dev/ttyACM0</param>
           <param name="baud_rate">115200</param>
           <param name="timeout">50</param> <!-- ms, per answer of the board (an answer takes ~5 ms) -->

@@ -25,7 +25,7 @@ public:
     position_name = name + "/" + hardware_interface::HW_IF_POSITION;
   }
 
-  /// Makes the current firmware position the origin (on activation).
+  /// Makes the current firmware position the origin (on configure).
   void zero(long ticks)
   {
     offset_ = -ticks;

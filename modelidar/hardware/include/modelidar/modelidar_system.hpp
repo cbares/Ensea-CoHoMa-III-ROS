@@ -46,10 +46,7 @@ struct Config
   int enc_counts_per_rev = 544;
   /// Velocity loop gains sent at activation, only if all four are given in the URDF.
   bool send_gains = false;
-  double kp = 0.0;
-  double ki = 0.0;
-  double kff = 0.0;
-  double dmin = 0.0;
+  Gains gains;
 };
 
 class ModelidarSystemHardware : public hardware_interface::SystemInterface

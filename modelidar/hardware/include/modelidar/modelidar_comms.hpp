@@ -5,12 +5,13 @@
  * @file modelidar_comms.hpp
  * @brief Serial link to the modelidar firmware (firmware/README.md, "Protocole série").
  *
- * Commands (each one answered by a state line):
+ * Commands (each one answered by exactly one line):
  *   ?               query the state
  *   V<l>,<r>        regulated wheel velocity, in mrad/s
  *   /               stop, wheels free
  *   *               brake
- *   K<kp>,<ki>,<kff>,<dmin>   set the velocity loop gains (answered by "K:..." then the state)
+ *   K<kp>,<ki>,<kff>,<dmin>   set the velocity loop gains: answered by "K:kp,ki,kff,dmin"
+ *                   instead of the state, and not answered at all if the gains are refused
  *
  * State line:  !0700,0600 L:+600,+420 R:+42.857,+210 C:USB F:-
  *   - duty cycle applied (0..1000, 500 = stopped)
@@ -18,7 +19,8 @@
  *   - C: who drives (USB, RC, LOST)
  *   - F: active fault (-, USB_TIMEOUT, STALL)
  *
- * At boot the firmware also sends "MCU started (reset: ...)": the positions restart at 0.
+ * At boot the firmware also sends, unprompted, "MCU started (reset: ...)": the positions
+ * restart at 0.
  */
 
 #include <algorithm>
@@ -39,6 +41,9 @@ namespace modelidar
 /// Wheel velocity command limit accepted by the firmware (rad/s).
 constexpr double MAX_WHEEL_SPEED = 50.0;
 
+/// Start of the line sent by the firmware at boot.
+constexpr const char * BOOT_MESSAGE = "MCU started";
+
 struct WheelReading
 {
   double velocity = 0.0;  ///< encoder ticks per second
@@ -53,6 +58,15 @@ struct BoardState
   WheelReading right;
   std::string owner;  ///< USB, RC or LOST
   std::string fault;  ///< -, USB_TIMEOUT or STALL
+};
+
+/// Velocity loop gains (firmware/README.md, "Régulation de vitesse").
+struct Gains
+{
+  double kp = 0.0;
+  double ki = 0.0;
+  double kff = 0.0;
+  double dmin = 0.0;
 };
 
 /// Parses a state line ("!AAAA,BBBB L:v,p R:v,p C:x F:y"). Returns false if it is not one.
@@ -75,6 +89,30 @@ inline bool parse_state(const std::string & line, BoardState & out)
   s.fault = fault;
   out = s;
   return true;
+}
+
+/// Parses a gains line ("K:kp,ki,kff,dmin"). Returns false if it is not one.
+inline bool parse_gains(const std::string & line, Gains & out)
+{
+  Gains g;
+  int end = -1;
+  const int n = std::sscanf(
+    line.c_str(), "K:%lf,%lf,%lf,%lf %n", &g.kp, &g.ki, &g.kff, &g.dmin, &end);
+  if (n != 4 || end < 0 || static_cast<size_t>(end) != line.size()) {
+    return false;
+  }
+  out = g;
+  return true;
+}
+
+/// True if the gains are equal up to the firmware precision (f32).
+inline bool same_gains(const Gains & a, const Gains & b)
+{
+  auto close = [](double x, double y) {
+      return std::abs(x - y) <= 1e-6 + 1e-4 * std::abs(y);
+    };
+  return close(a.kp, b.kp) && close(a.ki, b.ki) && close(a.kff, b.kff) &&
+         close(a.dmin, b.dmin);
 }
 
 /// Velocity command frame, in mrad/s, clamped to the firmware limit.
@@ -109,6 +147,7 @@ public:
     serial_conn_.setTimeout(t);
     serial_conn_.open();
     serial_conn_.flushInput();
+    rx_tail_.clear();
   }
 
   /// Closes the link. Never throws: used on error and shutdown paths.
@@ -140,12 +179,16 @@ public:
 
   bool brake(BoardState & state) {return exchange("*\r", state);}
 
-  /// Velocity loop gains (see firmware/README.md, "Régulation de vitesse"). Lost at reboot.
-  bool set_gains(double kp, double ki, double kff, double dmin, BoardState & state)
+  /**
+   * Sets the velocity loop gains (lost at reboot). `applied` receives the gains the board
+   * now uses. False on timeout: the firmware does not answer gains it refuses.
+   */
+  bool set_gains(const Gains & gains, Gains & applied)
   {
     std::ostringstream ss;
-    ss << "K" << kp << "," << ki << "," << kff << "," << dmin << "\r";
-    return exchange(ss.str(), state);
+    ss << "K" << gains.kp << "," << gains.ki << "," << gains.kff << "," << gains.dmin << "\r";
+    std::string line;
+    return request(ss.str(), 'K', line) && parse_gains(line, applied);
   }
 
   /// True once after the firmware restarted (its positions went back to 0).
@@ -156,12 +199,61 @@ public:
     return r;
   }
 
+  /// Last boot line received, e.g. "MCU started (reset: watchdog)".
+  const std::string & boot_message() const {return boot_message_;}
+
 private:
-  /// Sends a command and waits for its state line, skipping the other lines
-  /// (boot message, "K:" answer). False on timeout or garbled answer.
-  bool exchange(const std::string & msg, BoardState & state)
+  static std::string strip_eol(std::string line)
   {
-    serial_conn_.flushInput();  // drop stale lines, so answers stay in step
+    while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
+      line.pop_back();
+    }
+    return line;
+  }
+
+  /// Records a boot line. True if `line` is one.
+  bool note_boot(const std::string & line)
+  {
+    if (line.rfind(BOOT_MESSAGE, 0) != 0) {
+      return false;
+    }
+    reset_seen_ = true;
+    boot_message_ = line;
+    return true;
+  }
+
+  /**
+   * Reads what arrived since the last exchange: stale answers (dropped, so that answers
+   * stay in step) and the boot line (sent unprompted, recorded). An unfinished boot line
+   * is kept in rx_tail_: its end is read with the next answer.
+   */
+  void drain_pending()
+  {
+    std::string data;
+    data.swap(rx_tail_);
+    const size_t n = serial_conn_.available();
+    if (n > 0) {
+      data += serial_conn_.read(n);
+    }
+    size_t start = 0;
+    for (size_t eol; (eol = data.find('\n', start)) != std::string::npos; start = eol + 1) {
+      note_boot(strip_eol(data.substr(start, eol - start)));
+    }
+    const std::string rest = data.substr(start);
+    const std::string boot(BOOT_MESSAGE);
+    const size_t len = std::min(rest.size(), boot.size());
+    if (!rest.empty() && rest.compare(0, len, boot, 0, len) == 0) {
+      rx_tail_ = rest;
+    }
+  }
+
+  /**
+   * Sends a command and waits for its answer, the first line starting with `prefix`,
+   * skipping the other lines (boot message). False on timeout.
+   */
+  bool request(const std::string & msg, char prefix, std::string & answer)
+  {
+    drain_pending();
     serial_conn_.write(msg);
 
     for (int i = 0; i < 4; ++i) {
@@ -172,23 +264,34 @@ private:
       if (line.empty()) {
         return false;  // timeout
       }
-      while (!line.empty() && (line.back() == '\n' || line.back() == '\r')) {
-        line.pop_back();
+      if (!rx_tail_.empty()) {
+        line = rx_tail_ + line;  // end of a boot line started before the command
+        rx_tail_.clear();
       }
-      if (line.rfind("MCU started", 0) == 0) {
-        reset_seen_ = true;
+      line = strip_eol(line);
+      if (note_boot(line)) {
         continue;
       }
-      if (line.rfind("!", 0) == 0) {
-        return parse_state(line, state);
+      if (!line.empty() && line[0] == prefix) {
+        answer = line;
+        return true;
       }
     }
     return false;
   }
 
+  /// Sends a command and parses its state line. False on timeout or garbled answer.
+  bool exchange(const std::string & msg, BoardState & state)
+  {
+    std::string line;
+    return request(msg, '!', line) && parse_state(line, state);
+  }
+
   serial::Serial serial_conn_;
   bool print_output_ = false;
   bool reset_seen_ = false;
+  std::string boot_message_;
+  std::string rx_tail_;  ///< start of a boot line not finished yet
 };
 
 }  // namespace modelidar
