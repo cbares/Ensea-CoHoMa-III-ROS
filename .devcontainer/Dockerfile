@@ -64,9 +64,14 @@ RUN rosdep update && rosdep install --from-paths /home/${USERNAME}/ws/src --igno
 RUN grep -qF 'TAG1' $HOME/.bashrc || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.bashrc
 RUN grep -qF 'TAG2' $HOME/.bashrc || echo 'source ~/ws/install/setup.bash # TAG2' >> $HOME/.bashrc
 
+# colcon silently skips a package it cannot find (e.g. submodule not checked out): check
+# that each one was built, so that the image build fails instead of the containers.
 RUN --mount=type=bind,from=src,target=src/modelidar \
     --mount=type=bind,from=mpu9250,target=src/mpu9250_ROS2_driver \
-    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --packages-select modelidar mpu9250driver"
+    /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --packages-select modelidar mpu9250driver" \
+    && for p in modelidar mpu9250driver; do \
+         test -d install/$p || { echo "ERROR: package $p not built (git submodule update --init?)"; exit 1; }; \
+       done
 
 COPY --chmod=+x <<-"EOF" /entrypoint.sh
 #!/bin/bash -l

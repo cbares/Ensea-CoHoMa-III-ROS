@@ -125,15 +125,19 @@ sudo addgroup realtime
 sudo usermod -a -G realtime $(whoami)
 ```
 
-Add in `/etc/security/limits.conf.d/rtkernel.conf`:
+Add in `/etc/security/limits.d/rtkernel.conf`:
 
 ```sh
 @realtime soft rtprio 99
-@realtime soft priority 99
 @realtime soft memlock unlimited
 @realtime hard rtprio 99
-@realtime hard priority 99
 @realtime hard memlock unlimited
+```
+
+install udev rules for lidar:
+```sh 
+sudo cp ~/ws/src/modelidar/udev/99-modelidar.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules && sudo udevadm trigger
 ```
 
 ```sh

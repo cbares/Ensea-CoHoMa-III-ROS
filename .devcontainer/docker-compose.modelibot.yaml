@@ -81,6 +81,9 @@ services:
     group_add:
       - "${_I2C_GID:-164}"
     restart: unless-stopped
+    # The C++ node directly, without `ros2 launch` (Python: slow to start on the Pi, and
+    # stays in memory). __node: the name used as key in mpu9250.yaml.
     command: >-
-      ros2 launch mpu9250driver mpu9250driver_launch.py
-      params_file:=/home/${_ROS_USER}/ws/install/modelidar/share/modelidar/config/mpu9250.yaml
+      /home/${_ROS_USER}/ws/install/mpu9250driver/lib/mpu9250driver/mpu9250driver
+      --ros-args -r __node:=mpu9250driver_node
+      --params-file /home/${_ROS_USER}/ws/install/modelidar/share/modelidar/config/mpu9250.yaml
