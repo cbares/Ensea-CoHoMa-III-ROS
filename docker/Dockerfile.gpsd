@@ -22,10 +22,20 @@ ENV SHELL=/bin/bash
 # ********************************************************
 
 
-RUN apt-get update && apt-get install -y libboost-dev
+RUN apt-get update && apt-get install -y gpsd-clients
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-gpsd-client
 
 RUN apt-get update && sudo apt-get install -y supervisor
 RUN mkdir -p /var/log/supervisor
+
+RUN apt-get update && apt-get install -y rtklib
+
+RUN apt-get update && apt-get install -y libboost-dev
+
+# Same middleware as the other containers (router: zenoh_router, docker/compose.yaml)
+RUN apt-get update && apt-get install -y ros-${ROS_DISTRO}-rmw-zenoh-cpp
+ENV RMW_IMPLEMENTATION=rmw_zenoh_cpp
+
 
 ENV RCUTILS_COLORIZED_OUTPUT=1
 USER ${USERNAME}
@@ -34,14 +44,12 @@ RUN mkdir -p /home/${USERNAME}/ws/src
 WORKDIR /home/${USERNAME}/ws
 SHELL ["/bin/bash", "--login", "-c"] 
 
-
 ADD https://github.com/jenswilly/sbus_serial.git /home/${USERNAME}/ws/src/sbus_serial
 
-RUN /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select sbus_serial"
+RUN source /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select sbus_serial
 
 RUN --mount=type=bind,source=send_udp,target=src/send_udp \
     /bin/bash -c "source  /opt/ros/${ROS_DISTRO}/setup.bash; colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select send_udp"
-
 
 RUN grep -qF 'TAG1' $HOME/.profile || echo 'source /opt/ros/${ROS_DISTRO}/setup.bash # TAG1' >> $HOME/.profile
 RUN grep -qF 'TAG2' $HOME/.profile || echo 'source $HOME/ws/install/setup.bash # TAG2' >> $HOME/.profile
@@ -52,18 +60,16 @@ COPY --chmod=+x <<-"EOF" /entrypoint.sh
 
 source /opt/ros/${ROS_DISTRO}/setup.bash
 source $HOME/ws/install/setup.bash
-
 exec "$@"
 EOF
 
+
 # File supervisord.conf
-#COPY supervisor-gpsd.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/gpsd/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 
 
 ENTRYPOINT ["/bin/bash", "/entrypoint.sh"]
-#CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-CMD ["ros2", "launch", "send_udp", "gps_sbus_launch.py"]
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 # ENTRYPOINT ["tail", "-f", "/dev/null"]

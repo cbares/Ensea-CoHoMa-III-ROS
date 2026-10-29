@@ -142,8 +142,9 @@ sudo udevadm control --reload-rules && sudo udevadm trigger
 
 ```sh
 sudo adduser pi docker
-docker compose -f .devcontainer/docker-compose.modelibot.yaml build
-docker compose -f .devcontainer/docker-compose.modelibot.yaml up
+cp docker/env.example docker/.env   # then edit it
+docker compose -f docker/compose.yaml up -d --build              # router, base, IMU, lidar
+docker compose -f docker/compose.yaml --profile gps up -d --build  # + GPS server
 ```
 
 ## Super Client

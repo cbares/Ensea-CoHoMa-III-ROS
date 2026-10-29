@@ -1,7 +1,12 @@
 name: modelibot
 
-# ROS settings shared by every container of the robot (same values in
-# docker-compose.gpsd-server.yaml and ../Lslidar_ROS2_driver/docker-compose.yaml).
+# Containers of the robot. From the root of the repository:
+#   docker compose -f docker/compose.yaml up -d --build      # router, base, IMU, lidar
+#   docker compose -f docker/compose.yaml --profile gps up -d  # + GPS server
+# Settings: docker/.env (copy env.example).
+# The lidar alone (other robot): docker compose -f Lslidar_ROS2_driver/docker-compose.yaml up
+
+# ROS settings shared by every container of the robot.
 # Zenoh: the nodes talk through the router of the host (zenoh_router, tcp/localhost:7447).
 x-ros-env: &ros-env
   ROS_DOMAIN_ID: ${_ROS_DOMAIN_ID:-0}
@@ -27,7 +32,7 @@ services:
       additional_contexts:
         src: ../modelidar
         mpu9250: ../mpu9250_ROS2_driver
-      dockerfile: .devcontainer/Dockerfile
+      dockerfile: docker/Dockerfile
       args:
         USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
     depends_on:
@@ -87,3 +92,64 @@ services:
       /home/${_ROS_USER}/ws/install/mpu9250driver/lib/mpu9250driver/mpu9250driver
       --ros-args -r __node:=mpu9250driver_node
       --params-file /home/${_ROS_USER}/ws/install/modelidar/share/modelidar/config/mpu9250.yaml
+
+  # Lidar: defined in its own repository, which can also run it alone (tests with other
+  # robots). Here it uses the robot's router and settings.
+  lslidar_container:
+    extends:
+      file: ../Lslidar_ROS2_driver/docker-compose.yaml
+      service: lslidar_container
+    depends_on:
+      - zenoh_router
+    environment:
+      RMW_IMPLEMENTATION: rmw_zenoh_cpp
+
+  # GPS (gpsd, RTK): only with --profile gps.
+  gpsd_server_container:
+    image: gps_server_modelibot
+    profiles: [gps]
+    build:
+      context: ../
+      dockerfile: docker/Dockerfile.gpsd
+      args:
+        USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
+    depends_on:
+      - zenoh_router
+    privileged: true
+    environment:
+      <<: *ros-env
+      DISPLAY: ${DISPLAY:-:0}
+    volumes:
+      - ../:/home/$_ROS_USER/ws/src:cached
+      - /tmp/.X11-unix:/tmp/.X11-unix:cached
+      - /dev/dri:/dev/dri:cached
+      - ~/.Xauthority:/home/$_ROS_USER/.Xauthority
+      - /dev/input:/dev/input:bind
+      - /dev:/dev:bind
+      - /run/user/${UID:-1000}:/run/user/${UID:-1000}
+    network_mode: "host"
+    ipc: "host"
+    pid: "host"
+    user: $_ROS_USER
+    tty: true
+    restart: unless-stopped
+
+  # SBUS -> PWM (send_udp), not finished: see Dockerfile.sbus_pwm.
+  # ros_sbus:
+  #   image: sbus_pwm_modelibot
+  #   profiles: [sbus]
+  #   build:
+  #     context: ../
+  #     dockerfile: docker/Dockerfile.sbus_pwm
+  #     args:
+  #       USERNAME: ${_ROS_USER:?Please set an .env file with _ROS_USER}
+  #   depends_on:
+  #     - zenoh_router
+  #   privileged: true
+  #   environment: *ros-env
+  #   volumes:
+  #     - /dev:/dev:bind
+  #   network_mode: "host"
+  #   ipc: "host"
+  #   user: $_ROS_USER
+  #   restart: unless-stopped

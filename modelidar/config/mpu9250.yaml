@@ -1,5 +1,5 @@
 # IMU MPU9250 of the robot (package mpu9250driver, see mpu9250_ROS2_driver/params/mpu9250.yaml).
-# Used by the imu_container service (.devcontainer/docker-compose.modelibot.yaml) and by
+# Used by the imu_container service (docker/compose.yaml) and by
 # launch/modelidar.launch.py imu:=true.
 mpu9250driver_node:
   ros__parameters:
